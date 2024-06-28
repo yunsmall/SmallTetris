@@ -7,9 +7,10 @@ import java.util.Random;
 public class BlockPanel extends JPanel {
     private final int x_blocks = 10;
     private final int y_blocks = 20;
-    private int x_offset = 0;
-    private int y_offset = 0;
+    private int x_pixel_offset = 0;
+    private int y_pixel_offset = 0;
 
+    //0为空元素，显示为白色，先索引的是纵向的，即y，然后是横向的x
     private int[][] map = new int[y_blocks][x_blocks];
 
 
@@ -71,12 +72,12 @@ public class BlockPanel extends JPanel {
         //横向有空位
         if (this.getHeight() / y_blocks < this.getWidth() / x_blocks) {
             block_width = this.getHeight() / y_blocks;
-            x_offset = (this.getWidth() - x_blocks * block_width) / 2;
+            x_pixel_offset = (this.getWidth() - x_blocks * block_width) / 2;
         }
         //纵向有空位
         else {
             block_width = this.getWidth() / x_blocks;
-            y_offset = (this.getHeight() - y_blocks * block_width) / 2;
+            y_pixel_offset = (this.getHeight() - y_blocks * block_width) / 2;
         }
 
 
@@ -87,20 +88,20 @@ public class BlockPanel extends JPanel {
         g.setColor(Color.ORANGE);
         //竖线
         for (int i = 0; i <= x_blocks; i++) {
-            int now_x = x_offset + block_width * i;
+            int now_x = x_pixel_offset + block_width * i;
             for (int j = -2; j < 3; j++) {
                 if (j != 0) {
-                    g.drawLine(now_x + j, y_offset, now_x + j, y_offset + y_blocks * block_width);
+                    g.drawLine(now_x + j, y_pixel_offset, now_x + j, y_pixel_offset + y_blocks * block_width);
                 }
 
             }
         }
         //横线
         for (int i = 0; i <= y_blocks; i++) {
-            int now_y = y_offset + block_width * i;
+            int now_y = y_pixel_offset + block_width * i;
             for (int j = -2; j < 3; j++) {
                 if (j != 0) {
-                    g.drawLine(x_offset, now_y + j, x_offset + x_blocks * block_width, now_y + j);
+                    g.drawLine(x_pixel_offset, now_y + j, x_pixel_offset + x_blocks * block_width, now_y + j);
                 }
             }
         }
@@ -109,14 +110,14 @@ public class BlockPanel extends JPanel {
         g.setColor(Color.BLACK);
         //竖线
         for (int i = 0; i <= x_blocks; i++) {
-            int now_x = x_offset + block_width * i;
-            g.drawLine(now_x, y_offset, now_x, y_offset + y_blocks * block_width);
+            int now_x = x_pixel_offset + block_width * i;
+            g.drawLine(now_x, y_pixel_offset, now_x, y_pixel_offset + y_blocks * block_width);
 
         }
         //横线
         for (int i = 0; i <= y_blocks; i++) {
-            int now_y = y_offset + block_width * i;
-            g.drawLine(x_offset, now_y, x_offset + x_blocks * block_width, now_y);
+            int now_y = y_pixel_offset + block_width * i;
+            g.drawLine(x_pixel_offset, now_y, x_pixel_offset + x_blocks * block_width, now_y);
 
         }
 
@@ -133,15 +134,8 @@ public class BlockPanel extends JPanel {
         //画当前下落的方块
         g.setColor(current_block.getColor());
         for (int i = 0; i < current_block.getBlockLen(); i++) {
-            for (int j = 0; j < current_block.getBlockLen(); j++) {
-                if (current_block.getBlock()[j][i] == 1) {
-                    if (i + current_x >= 0 && j + current_y >= 0) {
-                        DrawXYBlock(g, i + current_x, j + current_y);
-                    }
-
-//                    g.fillRect(x_offset+(i+current_x)*block_width+2,y_offset+(j+current_y)*block_width+2,block_width-4,block_width-4);
-                }
-
+            for (int[] point : current_block.getData().getDatas()) {
+                DrawXYBlock(g, point[0] + current_x, point[1] + current_y);
             }
         }
 
@@ -149,62 +143,130 @@ public class BlockPanel extends JPanel {
     }
 
     /**
+     * 点是否在地图内
+     *
+     * @param x
+     * @param y
+     * @return 是否在地图内
+     */
+    private boolean insideOfMap(int x, int y) {
+        return (x >= 0 && x < x_blocks && y >= 0 && y < y_blocks);
+    }
+
+    /**
+     * 点是否在地图内
+     *
+     * @param x
+     * @param y
+     * @return 是否在地图内
+     */
+    private boolean insideOfMapWithoutTop(int x, int y) {
+        return (x >= 0 && x < x_blocks && y < y_blocks);
+    }
+
+
+    private boolean canPlaceBlock(int x, int y) {
+        return insideOfMap(x, y) && (map[y][x] == 0);
+    }
+
+    /**
+     * 如果超出范围仍然会认为能放方块，只有真正有方块才会返回false，一般这个函数只在每个tick的下移函数才会调用，以防止生成时生成在外面的情况
+     *
+     * @param x
+     * @param y
+     * @return 有没有方块
+     */
+    private boolean justHasBlock(int x, int y) {
+        if (insideOfMap(x, y)) {
+            return map[y][x] != 0;
+        }
+        return false;
+    }
+
+    /**
+     * 如果碰撞了返回true，这个位置没有碰撞则为false，不用管范围问题，越界只会返回false保证不报错
+     *
+     * @param x         基坐标x
+     * @param y         基坐标y
+     * @param blockData 方块数据
+     * @return 是否碰撞
+     */
+    public boolean isCrashed(int x, int y, BlockData blockData) {
+        for (int[] point : blockData.getDatas()) {
+            int offset_x = point[0] + x;
+            int offset_y = point[1] + y;
+            if (!canPlaceBlock(offset_x, offset_y)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 如果碰撞了返回true，这个位置没有碰撞则为false，不用管范围问题，越界只会返回false保证不报错
+     *
+     * @param x         基坐标x
+     * @param y         基坐标y
+     * @param blockData 方块数据
+     * @return 是否碰撞
+     */
+    public boolean isCrashedWithoutTop(int x, int y, BlockData blockData) {
+        for (int[] point : blockData.getDatas()) {
+            int offset_x = point[0] + x;
+            int offset_y = point[1] + y;
+            if (!insideOfMapWithoutTop(offset_x, offset_y)) {
+                return true;
+            }
+            //前面那个if判断过了大部分，但y是否在map内没判断，因此这里判断一下，防止越界报错
+            if (offset_y >= 0 && !canPlaceBlock(offset_x, offset_y)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean cannotMoveDown() {
+        BlockData moved_data = current_block.getMoveTowardsBlocks(current_x, current_y + 1);
+        for (int[] point : moved_data.getDatas()) {
+            if (justHasBlock(point[0], point[1]) || !(point[1] < y_blocks)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * 到底了返回true，否则返回false
      *
      * @return 是否到底
      */
-    public boolean MoveDown() {
-        boolean end = false;
-
-        //外层遍历列
-        outfor:
-        for (int i = 0; i < this.current_block.getBlockLen(); i++) {
-            //内层遍历行
-            for (int j = this.current_block.getBlockLen() - 1; j >= 0; j--) {
-                //如果遍历到了方块中有方块的格子
-                if (this.current_block.getBlock()[j][i] != 0) {
-                    //如果下一个是底或其他方块
-                    //如果当前遍历到纵坐标在屏幕外，会产生异常，直接捕获
-                    try {
-                        if (current_y + j + 1 >= y_blocks || map[current_y + j + 1][current_x + i] != 0) {
-                            end = true;
-                            break outfor;
-                        }
-                    } catch (IndexOutOfBoundsException ignored) {
-
-                    }
-
-                    break;
-                }
-            }
-        }
-
-        if (!end) {
+    public boolean TryMoveDown() {
+        if (!cannotMoveDown()) {
             current_y++;
+            return false;
         }
-        return end;
+        return true;
     }
 
-    public boolean FixAndDetectFailue() {
+    /**
+     * 固定当前的blocks并且检测是否输了，输了返回true
+     *
+     * @return
+     */
+    public boolean FixCurrentBlockAndDetectFailue() {
+        //确定固定后的颜色
         int index = getColorIndex(this.current_block.getColor());
         if (index == -1) {
             index = 0;
         }
-        boolean is_failed = false;
-        try {
-            for (int i = 0; i < current_block.getBlockLen(); i++) {
-                for (int j = 0; j < current_block.getBlockLen(); j++) {
-                    if (this.current_block.getBlock()[j][i] != 0) {
-                        this.map[current_y + j][current_x + i] = index;
-                    }
-
-                }
+        BlockData moved_block_data = this.current_block.getMoveTowardsBlocks(current_x, current_y);
+        for (int[] point : moved_block_data.getDatas()) {
+            if (point[1] < 0) {
+                return true;
             }
-        } catch (IndexOutOfBoundsException e) {
-            is_failed = true;
+            this.map[point[1]][point[0]] = index;
         }
-        return is_failed;
-
+        return false;
     }
 
     public void DetectAndDeleteLine() {
@@ -243,16 +305,20 @@ public class BlockPanel extends JPanel {
 
     }
 
+    private Blocks generateNextBlocks() {
+        Blocks ret = Blocks.GetNextBlock();
+        ret.setColor(BlockPanel.SampleColor());
+        return ret;
+    }
+
     public void ResetBlock() {
-        this.next_block = Blocks.GetNextBlock();
-        this.next_block.setColor(BlockPanel.SampleColor());
+        this.next_block = generateNextBlocks();
         this.ChangeBlock();
     }
 
     public void ChangeBlock() {
         this.current_block = this.next_block;
-        this.next_block = Blocks.GetNextBlock();
-        this.next_block.setColor(BlockPanel.SampleColor());
+        this.next_block = generateNextBlocks();
         this.current_x = getDefaultX();
         this.current_y = getDefaultY();
     }
@@ -288,7 +354,7 @@ public class BlockPanel extends JPanel {
 
 
     private void DrawXYBlock(Graphics g, int x, int y) {
-        g.fillRect(x_offset + x * block_width + 3, y_offset + y * block_width + 3, block_width - 5, block_width - 5);
+        g.fillRect(x_pixel_offset + x * block_width + 3, y_pixel_offset + y * block_width + 3, block_width - 5, block_width - 5);
     }
 
     public Blocks getNext_block() {
@@ -325,59 +391,20 @@ public class BlockPanel extends JPanel {
     public void NextStep(BlockAction action) {
         switch (action) {
             case MoveLeft -> {
-                if (this.current_x > 0) {
-
-
-                    boolean can_move = true;
-                    //遍历第一列的每一行
-                    outfor:
-                    for (int j = 0; j < this.current_block.getMaxHeight(); j++) {
-                        //如果当前遍历到坐标在屏幕外，会产生异常，直接捕获
-                        try {
-                            for (int i = 0; i < this.current_block.getBlockLen(); i++) {
-                                if (map[current_y + j][current_x + i - 1] != 0 && this.current_block.getBlock()[j][i] != 0) {
-                                    can_move = false;
-                                    break outfor;
-                                }
-                            }
-                        } catch (IndexOutOfBoundsException ignored) {
-                        }
-                    }
-                    if (can_move) {
-                        this.current_x--;
-                    }
-
+                if (!isCrashedWithoutTop(current_x, current_y, current_block.getMoveLeftBlocks())) {
+                    this.current_x--;
                 }
             }
             case MoveRight -> {
-                if (this.current_x < this.x_blocks - current_block.getMaxWidth()) {
-
-                    boolean can_move = true;
-                    //遍历最后一列的每一行
-                    outfor:
-                    for (int j = 0; j < this.current_block.getMaxHeight(); j++) {
-                        //如果当前遍历到纵坐标在屏幕外，会产生异常，直接捕获
-                        try {
-                            for (int i = 0; i < this.current_block.getBlockLen(); i++) {
-                                if (map[current_y + j][current_x + i] != 0 && this.current_block.getBlock()[j][i - 1] != 0) {
-                                    can_move = false;
-                                    break outfor;
-                                }
-                            }
-
-                        } catch (IndexOutOfBoundsException ignored) {
-
-                        }
-
-                    }
-                    if (can_move) {
-                        this.current_x++;
-                    }
-
+                if (!isCrashedWithoutTop(current_x, current_y, current_block.getMoveRightBlocks())) {
+                    this.current_x++;
                 }
             }
             case Rot -> {
-                this.current_block.Rot(map, current_x, current_y);
+                BlockData rotted_block = this.current_block.getRotClockWiseBLocks();
+                if (!isCrashedWithoutTop(current_x, current_y, rotted_block)) {
+                    this.current_block.setData(rotted_block);
+                }
             }
         }
     }

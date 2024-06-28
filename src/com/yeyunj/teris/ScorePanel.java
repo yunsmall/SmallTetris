@@ -15,7 +15,7 @@ public class ScorePanel extends JPanel {
 
     private double next_block_location_y=0.3;
 
-    private int block_x_offset;
+    private int block_x_pixel_offset;
 //    private int block_y_offset;
 
     public ScorePanel(BlockPanel blockPanel) {
@@ -37,29 +37,34 @@ public class ScorePanel extends JPanel {
         g.setFont(new Font("黑体",Font.BOLD,20));
         g.drawString("下一个方块：", (int) (next_block_title_location[0]*this.getWidth()), (int) (next_block_title_location[1]*this.getHeight()));
 
-        block_x_offset=(this.getWidth()-this.blockPanel.getBlock_width()*this.blockPanel.getNext_block().getMaxWidth())/2;
-        if(block_x_offset<0){
-            block_x_offset=0;
+        int next_blocks_max_width=this.blockPanel.getNext_block().getMaxWidth();
+        int next_blocks_max_height=this.blockPanel.getNext_block().getMaxHeight();
+
+        int[] left_up=this.blockPanel.getNext_block().getData().getLeftUp();
+
+        block_x_pixel_offset =(this.getWidth()-this.blockPanel.getBlock_width()*next_blocks_max_width)/2;
+        if(block_x_pixel_offset <0){
+            block_x_pixel_offset =0;
         }
 
         g.setColor(Color.WHITE);
-        g.fillRect(block_x_offset-10,(int)(this.getHeight()*next_block_location_y)-10,10*2+this.blockPanel.getBlock_width()*this.blockPanel.getNext_block().getMaxWidth(),10*2+this.blockPanel.getBlock_width()*this.blockPanel.getNext_block().getMaxHeight());
+        g.fillRect(block_x_pixel_offset -10,(int)(this.getHeight()*next_block_location_y)-10,10*2+this.blockPanel.getBlock_width()*next_blocks_max_width,10*2+this.blockPanel.getBlock_width()*next_blocks_max_height);
 
         //画粗线
         g.setColor(Color.ORANGE);
         //竖线
-        for(int i=0;i<=this.blockPanel.getNext_block().getMaxWidth();i++){
+        for(int i=0;i<=next_blocks_max_width;i++){
             for(int j=-2;j<3;j++){
                 if(j!=0){
-                    g.drawLine(block_x_offset+i*this.blockPanel.getBlock_width()+j,(int)(this.getHeight()*next_block_location_y)-2,block_x_offset+i*this.blockPanel.getBlock_width()+j,(int)(this.getHeight()*next_block_location_y+this.blockPanel.next_block.getMaxHeight()*this.blockPanel.getBlock_width())+2);
+                    g.drawLine(block_x_pixel_offset +i*this.blockPanel.getBlock_width()+j,(int)(this.getHeight()*next_block_location_y)-2, block_x_pixel_offset +i*this.blockPanel.getBlock_width()+j,(int)(this.getHeight()*next_block_location_y+this.blockPanel.next_block.getMaxHeight()*this.blockPanel.getBlock_width())+2);
                 }
             }
         }
         //横线
-        for(int i=0;i<=this.blockPanel.getNext_block().getMaxHeight();i++){
+        for(int i=0;i<=next_blocks_max_height;i++){
             for(int j=-2;j<3;j++){
                 if(j!=0){
-                    g.drawLine(block_x_offset-2,(int)(this.getHeight()*next_block_location_y+i*this.blockPanel.getBlock_width())+j,block_x_offset+this.blockPanel.getNext_block().getMaxWidth()*this.blockPanel.getBlock_width()+2,(int)(this.getHeight()*next_block_location_y+i*this.blockPanel.getBlock_width())+j);
+                    g.drawLine(block_x_pixel_offset -2,(int)(this.getHeight()*next_block_location_y+i*this.blockPanel.getBlock_width())+j, block_x_pixel_offset +next_blocks_max_width*this.blockPanel.getBlock_width()+2,(int)(this.getHeight()*next_block_location_y+i*this.blockPanel.getBlock_width())+j);
                 }
             }
         }
@@ -67,23 +72,30 @@ public class ScorePanel extends JPanel {
 
         g.setColor(Color.BLACK);
         //竖线
-        for(int i=0;i<=this.blockPanel.getNext_block().getMaxWidth();i++){
-            g.drawLine(block_x_offset+i*this.blockPanel.getBlock_width(),(int)(this.getHeight()*next_block_location_y),block_x_offset+i*this.blockPanel.getBlock_width(),(int)(this.getHeight()*next_block_location_y+this.blockPanel.next_block.getMaxHeight()*this.blockPanel.getBlock_width()));
+        for(int i=0;i<=next_blocks_max_width;i++){
+            g.drawLine(block_x_pixel_offset +i*this.blockPanel.getBlock_width(),(int)(this.getHeight()*next_block_location_y), block_x_pixel_offset +i*this.blockPanel.getBlock_width(),(int)(this.getHeight()*next_block_location_y+this.blockPanel.next_block.getMaxHeight()*this.blockPanel.getBlock_width()));
         }
         //横线
-        for(int i=0;i<=this.blockPanel.getNext_block().getMaxHeight();i++){
-            g.drawLine(block_x_offset,(int)(this.getHeight()*next_block_location_y+i*this.blockPanel.getBlock_width()),block_x_offset+this.blockPanel.getNext_block().getMaxWidth()*this.blockPanel.getBlock_width(),(int)(this.getHeight()*next_block_location_y+i*this.blockPanel.getBlock_width()));
+        for(int i=0;i<=next_blocks_max_height;i++){
+            g.drawLine(block_x_pixel_offset,(int)(this.getHeight()*next_block_location_y+i*this.blockPanel.getBlock_width()), block_x_pixel_offset +next_blocks_max_width*this.blockPanel.getBlock_width(),(int)(this.getHeight()*next_block_location_y+i*this.blockPanel.getBlock_width()));
         }
 
         g.setColor(this.blockPanel.getNext_block().getColor());
-        for(int i=0;i<this.blockPanel.getNext_block().getMaxWidth();i++){
-            for(int j=0;j<this.blockPanel.getNext_block().getMaxHeight();j++){
-                if(this.blockPanel.getNext_block().getBlock()[j][i]!=0){
-                    g.fillRect(block_x_offset+i*this.blockPanel.getBlock_width()+3,(int)(this.getHeight()*next_block_location_y+j*this.blockPanel.getBlock_width())+3,this.blockPanel.getBlock_width()-5,this.blockPanel.getBlock_width()-5);
-//                    g.fillRect(x_offset+i*block_width+2,y_offset+j*block_width+2,block_width-4,block_width-4);
-                }
+
+        for(int i=0;i<=this.blockPanel.getNext_block().getBlockLen();i++){
+            for(int[] point:this.blockPanel.getNext_block().getData().getDatas()){
+                g.fillRect(block_x_pixel_offset +(point[0]-left_up[0])*this.blockPanel.getBlock_width()+3,(int)(this.getHeight()*next_block_location_y+(point[1]-left_up[1])*this.blockPanel.getBlock_width())+3,this.blockPanel.getBlock_width()-5,this.blockPanel.getBlock_width()-5);
             }
         }
+
+//        for(int i=0;i<next_blocks_max_width;i++){
+//            for(int j=0;j<next_blocks_max_height;j++){
+//                if(this.blockPanel.getNext_block().getBlock()[j][i]!=0){
+//                    g.fillRect(block_x_offset+i*this.blockPanel.getBlock_width()+3,(int)(this.getHeight()*next_block_location_y+j*this.blockPanel.getBlock_width())+3,this.blockPanel.getBlock_width()-5,this.blockPanel.getBlock_width()-5);
+////                    g.fillRect(x_offset+i*block_width+2,y_offset+j*block_width+2,block_width-4,block_width-4);
+//                }
+//            }
+//        }
 
 //        g.drawString("6666",100,200);
     }

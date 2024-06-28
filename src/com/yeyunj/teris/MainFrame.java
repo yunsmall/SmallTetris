@@ -23,6 +23,8 @@ public class MainFrame extends JFrame {
     private final static String about_project_message = """
             项目说明""";
 
+    private final int default_speed=800;
+
 
     //菜单栏部分
     private JMenuBar jMenuBar;
@@ -66,7 +68,9 @@ public class MainFrame extends JFrame {
         new_game_jmenuitem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                speed=default_speed;
                 MainFrame.this.blockPanel.Reset();
+                game_timer.setDelay(speed);
             }
         });
         game_jmenu.add(new_game_jmenuitem);
@@ -217,25 +221,29 @@ public class MainFrame extends JFrame {
         });
 
         //默认速度
-        speed = 800;
+        speed = default_speed;
         //创建游戏主计时器
         game_timer = new Timer(speed, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                boolean is_end = MainFrame.this.blockPanel.MoveDown();
+                boolean is_end = MainFrame.this.blockPanel.TryMoveDown();
 
                 MainFrame.this.repaint();
 
                 if (is_end) {
-                    boolean is_failed = MainFrame.this.blockPanel.FixAndDetectFailue();
+                    boolean is_failed = MainFrame.this.blockPanel.FixCurrentBlockAndDetectFailue();
                     if (!is_failed) {
                         MainFrame.this.blockPanel.DetectAndDeleteLine();
                         MainFrame.this.blockPanel.ChangeBlock();
 //                        MainFrame.this.blockPanel.SetXY(MainFrame.this.blockPanel.getDefaultX(),MainFrame.this.blockPanel.getDefaultY());
 //                        MainFrame.this.scorePanel.repaint();
                     } else {
+                        game_timer.stop();
                         JOptionPane.showMessageDialog(MainFrame.this, "你输了");
                         MainFrame.this.blockPanel.Reset();
+                        speed=default_speed;
+                        game_timer.setDelay(speed);
+                        game_timer.start();
                     }
 
 
