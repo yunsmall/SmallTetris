@@ -9,7 +9,20 @@ public class MainFrame extends JFrame {
 
     private final static int width = 600;
     private final static int height = 800;
-//    private static com.yeyunj.teris.MainFrame m_instance;
+    //    private static com.yeyunj.teris.MainFrame m_instance;
+    private final static String about_author_message = """
+            组名；OutOfMemory
+            组长：叶蕴杰
+            组员：王家骏、陈逸远、陈杰凯、李鑫
+                        
+            叶蕴杰：人员调配协调、项目开发
+            王家骏：项目需求分析及项目进度管理
+            陈逸远：确立功能需求及项目开发
+            陈杰凯：产品定义及项目测试
+            李鑫：计划表、任务书、功能说明、实验报告的撰写""";
+    private final static String about_project_message = """
+            项目说明""";
+
 
     //菜单栏部分
     private JMenuBar jMenuBar;
@@ -107,15 +120,7 @@ public class MainFrame extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 game_timer.stop();
                 JOptionPane.showMessageDialog(MainFrame.this,
-                        "组名；OutOfMemory\n" +
-                                "组长：叶蕴杰\n" +
-                                "组员：王家骏、陈逸远、陈杰凯、李鑫\n\n" +
-                                "组内分工：\n" +
-                                "叶蕴杰：人员调配协调、项目开发\n" +
-                                "王家骏：项目需求分析及项目进度管理\n" +
-                                "陈逸远：确立功能需求及项目开发\n" +
-                                "陈杰凯：产品定义及项目测试\n" +
-                                "李鑫：计划表、任务书、功能说明、实验报告的撰写\n",
+                        about_author_message,
                         "关于作者",
                         JOptionPane.PLAIN_MESSAGE);
                 game_timer.start();
@@ -131,7 +136,7 @@ public class MainFrame extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 game_timer.stop();
                 JOptionPane.showMessageDialog(MainFrame.this,
-                        "项目说明",
+                        about_project_message,
                         "关于本软件",
                         JOptionPane.PLAIN_MESSAGE);
 
