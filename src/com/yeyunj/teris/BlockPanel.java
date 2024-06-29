@@ -22,15 +22,15 @@ public class BlockPanel extends JPanel {
     private int score = 0;
     Blocks next_block;
 
-    private int generate_at_bottom_ticks_count = 0;
+    private int generate_at_bottom_seconds_count = 0;
 
     private static final Random rainbow_random = new Random();
 
     public static final double rainbow_rate=0.05;
     public static final Color rainbow_color = new Color(255, 0, 255);
 
-    //每50个tick后会生成一层方块
-    public static final int generate_at_buttom_after_ticks=50;
+    //每40秒后会生成一层方块
+    public static final int generate_at_buttom_after_seconds=2;
 
     public enum BlockAction {
         MoveRight,
@@ -214,7 +214,7 @@ public class BlockPanel extends JPanel {
         return false;
     }
 
-    private boolean canMoveDown() {
+    public boolean canMoveDown() {
         BlockData moved_data = current_block.getMoveTowardsBlocks(current_x, current_y + 1);
         for (int[] point : moved_data.getDatas()) {
             if (justHasBlock(point[0], point[1]) || !(point[1] < y_blocks_count)) {
@@ -237,17 +237,20 @@ public class BlockPanel extends JPanel {
         return true;
     }
 
+    public void incSecondCount(){
+        generate_at_bottom_seconds_count++;
+    }
+
     /**
-     *
+     * 全部方块上移，并且在底部生成方块，如果失败返回true。必须先整体上移，再执行blocks的下移，不然会导致上移后方块不知道自己碰撞了，会造成逻辑非常复杂
      * @return
      */
     public boolean generateBlockAtBottomAndDetectFailure(){
         boolean is_failure=false;
 
-        generate_at_bottom_ticks_count++;
-        //该生成方块了
-        if(generate_at_bottom_ticks_count==generate_at_buttom_after_ticks){
-            generate_at_bottom_ticks_count=0;
+        //如果该生成方块了
+        if(generate_at_bottom_seconds_count >=generate_at_buttom_after_seconds){
+            generate_at_bottom_seconds_count =0;
             is_failure=moveAllBlockUpOneCeilAndDetectFailure();
             generateRandomBlockAtBottom();
         }
@@ -316,6 +319,20 @@ public class BlockPanel extends JPanel {
     }
 
     /**
+     * 当方块固定时该做的事，包括把移动的方块固定到map，删除那些应该消失的方块，切换下一个方块。失败返回true
+     * @return 是否失败
+     */
+    public boolean whenBlocksFixShouldDoAndDetectFailure(){
+        boolean failure=FixCurrentBlockAndDetectFailure();
+        if (!failure) {
+            DetectAndDeleteLine();
+            ChangeBlock();
+        }
+        return failure;
+    }
+
+
+    /**
      * 固定当前的blocks并且检测是否输了，输了返回true
      *
      * @return 是否输了
@@ -336,7 +353,7 @@ public class BlockPanel extends JPanel {
         return false;
     }
 
-    public void DetectAndDeleteLine() {
+    private void DetectAndDeleteLine() {
         double start_rate = 10; //只消掉一行加的分
         double rate = 2; //每多消掉一行增加的倍数
 
@@ -394,6 +411,14 @@ public class BlockPanel extends JPanel {
         }
     }
 
+    private void clearMap(){
+        for (int i = 0; i < y_blocks_count; i++) {
+            for (int j = 0; j < x_blocks_count; j++) {
+                this.map[i][j] = 0;
+            }
+        }
+    }
+
     private void clearColumn(int columnIndex) {
         for (int i = 0; i < this.y_blocks_count; i++) {
             this.map[i][columnIndex] = 0;
@@ -421,7 +446,7 @@ public class BlockPanel extends JPanel {
         this.ChangeBlock();
     }
 
-    public void ChangeBlock() {
+    private void ChangeBlock() {
         this.current_block = this.next_block;
         this.next_block = generateNextBlocks();
         this.current_x = getDefaultX();
@@ -430,13 +455,9 @@ public class BlockPanel extends JPanel {
 
     public void Reset() {
         this.score = 0;
-        for (int i = 0; i < y_blocks_count; i++) {
-            for (int j = 0; j < x_blocks_count; j++) {
-                this.map[i][j] = 0;
-            }
-        }
+        this.clearMap();;
         this.ResetBlock();
-        this.generate_at_bottom_ticks_count=0;
+        this.generate_at_bottom_seconds_count =0;
     }
 
     /**
