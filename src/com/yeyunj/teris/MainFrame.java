@@ -4,7 +4,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-
 public class MainFrame extends JFrame {
 
     private final static int width = 600;
@@ -22,8 +21,7 @@ public class MainFrame extends JFrame {
             李鑫：计划表、任务书、功能说明、实验报告的撰写""";
     private final static String about_project_message = """
             项目说明""";
-
-    private final int default_speed=800;
+    private final int default_speed = 800;
 
 
     //菜单栏部分
@@ -68,7 +66,7 @@ public class MainFrame extends JFrame {
         new_game_jmenuitem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                speed=default_speed;
+                speed = default_speed;
                 MainFrame.this.blockPanel.Reset();
                 game_timer.setDelay(speed);
             }
@@ -104,7 +102,6 @@ public class MainFrame extends JFrame {
                         break;
                     } catch (NumberFormatException exception) {
                         JOptionPane.showMessageDialog(MainFrame.this, "输入不合法，请重新输入");
-//                        continue;
                     }
                 }
                 game_timer.setDelay(speed);
@@ -153,8 +150,6 @@ public class MainFrame extends JFrame {
 
         //设置布局
         gridBagLayout = new GridBagLayout();
-
-
         this.setLayout(gridBagLayout);
 
 
@@ -180,8 +175,6 @@ public class MainFrame extends JFrame {
         //添加分数面板
         this.add(scorePanel);
 
-//        this.setFocusable(true);
-//        this.requestFocus();
 
         //设置按键监听
         this.addKeyListener(new KeyAdapter() {
@@ -200,16 +193,11 @@ public class MainFrame extends JFrame {
                     case KeyEvent.VK_DOWN -> {
                         if (game_timer.getDelay() != speed / 10) {
                             game_timer.setDelay(speed / 10);
-//                            timer.
                         }
-
-
                     }
-
                 }
                 MainFrame.this.repaint();
             }
-
 
             @Override
             public void keyReleased(KeyEvent e) {
@@ -227,7 +215,6 @@ public class MainFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 boolean is_end = MainFrame.this.blockPanel.TryMoveDown();
-
                 MainFrame.this.repaint();
 
                 if (is_end) {
@@ -235,18 +222,14 @@ public class MainFrame extends JFrame {
                     if (!is_failed) {
                         MainFrame.this.blockPanel.DetectAndDeleteLine();
                         MainFrame.this.blockPanel.ChangeBlock();
-//                        MainFrame.this.blockPanel.SetXY(MainFrame.this.blockPanel.getDefaultX(),MainFrame.this.blockPanel.getDefaultY());
-//                        MainFrame.this.scorePanel.repaint();
                     } else {
                         game_timer.stop();
                         JOptionPane.showMessageDialog(MainFrame.this, "你输了");
                         MainFrame.this.blockPanel.Reset();
-                        speed=default_speed;
+                        speed = default_speed;
                         game_timer.setDelay(speed);
                         game_timer.start();
                     }
-
-
                 }
             }
         });
@@ -255,16 +238,11 @@ public class MainFrame extends JFrame {
         this.setSize(width, height);
         this.setResizable(false);
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
-
         this.requestFocus();
         this.setVisible(true);
 
         //启动计时器
         game_timer.start();
-
-//        blockPanel.requestFocus();
-
-
     }
 
 //    public static com.yeyunj.teris.MainFrame getInstance(){
@@ -284,6 +262,5 @@ public class MainFrame extends JFrame {
 
     private static void startUI() {
         MainFrame mainFrame = new MainFrame();
-//        mainFrame.setVisible(true);
     }
 }
