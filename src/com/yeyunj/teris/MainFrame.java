@@ -220,7 +220,7 @@ public class MainFrame extends JFrame {
             }
         });
 
-        //默认速度
+        //初始化为默认速度
         speed = default_speed;
         //创建游戏主计时器
         game_timer = new Timer(speed, new ActionListener() {
@@ -231,7 +231,7 @@ public class MainFrame extends JFrame {
                 MainFrame.this.repaint();
 
                 if (is_end) {
-                    boolean is_failed = MainFrame.this.blockPanel.FixCurrentBlockAndDetectFailue();
+                    boolean is_failed = MainFrame.this.blockPanel.FixCurrentBlockAndDetectFailure();
                     if (!is_failed) {
                         MainFrame.this.blockPanel.DetectAndDeleteLine();
                         MainFrame.this.blockPanel.ChangeBlock();

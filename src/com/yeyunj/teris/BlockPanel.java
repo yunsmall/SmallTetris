@@ -5,20 +5,20 @@ import java.awt.*;
 import java.util.Random;
 
 public class BlockPanel extends JPanel {
-    private final int x_blocks = 10;
-    private final int y_blocks = 20;
+    private final int x_blocks_count = 10;
+    private final int y_blocks_count = 20;
     private int x_pixel_offset = 0;
     private int y_pixel_offset = 0;
 
     //0为空元素，显示为白色，先索引的是纵向的，即y，然后是横向的x
-    private int[][] map = new int[y_blocks][x_blocks];
+    private int[][] map = new int[y_blocks_count][x_blocks_count];
 
 
     private int block_width;
 
     Blocks current_block;
 
-    private int current_x = x_blocks / 2;
+    private int current_x = x_blocks_count / 2;
     //    private int current_y=-current_block.getBlockLen();
     private int current_y = 0;
 
@@ -70,14 +70,14 @@ public class BlockPanel extends JPanel {
     @Override
     public void paint(Graphics g) {
         //横向有空位
-        if (this.getHeight() / y_blocks < this.getWidth() / x_blocks) {
-            block_width = this.getHeight() / y_blocks;
-            x_pixel_offset = (this.getWidth() - x_blocks * block_width) / 2;
+        if (this.getHeight() / y_blocks_count < this.getWidth() / x_blocks_count) {
+            block_width = this.getHeight() / y_blocks_count;
+            x_pixel_offset = (this.getWidth() - x_blocks_count * block_width) / 2;
         }
         //纵向有空位
         else {
-            block_width = this.getWidth() / x_blocks;
-            y_pixel_offset = (this.getHeight() - y_blocks * block_width) / 2;
+            block_width = this.getWidth() / x_blocks_count;
+            y_pixel_offset = (this.getHeight() - y_blocks_count * block_width) / 2;
         }
 
 
@@ -87,21 +87,21 @@ public class BlockPanel extends JPanel {
         //画粗线条
         g.setColor(Color.ORANGE);
         //竖线
-        for (int i = 0; i <= x_blocks; i++) {
+        for (int i = 0; i <= x_blocks_count; i++) {
             int now_x = x_pixel_offset + block_width * i;
             for (int j = -2; j < 3; j++) {
                 if (j != 0) {
-                    g.drawLine(now_x + j, y_pixel_offset, now_x + j, y_pixel_offset + y_blocks * block_width);
+                    g.drawLine(now_x + j, y_pixel_offset, now_x + j, y_pixel_offset + y_blocks_count * block_width);
                 }
 
             }
         }
         //横线
-        for (int i = 0; i <= y_blocks; i++) {
+        for (int i = 0; i <= y_blocks_count; i++) {
             int now_y = y_pixel_offset + block_width * i;
             for (int j = -2; j < 3; j++) {
                 if (j != 0) {
-                    g.drawLine(x_pixel_offset, now_y + j, x_pixel_offset + x_blocks * block_width, now_y + j);
+                    g.drawLine(x_pixel_offset, now_y + j, x_pixel_offset + x_blocks_count * block_width, now_y + j);
                 }
             }
         }
@@ -109,21 +109,21 @@ public class BlockPanel extends JPanel {
         //画细线条
         g.setColor(Color.BLACK);
         //竖线
-        for (int i = 0; i <= x_blocks; i++) {
+        for (int i = 0; i <= x_blocks_count; i++) {
             int now_x = x_pixel_offset + block_width * i;
-            g.drawLine(now_x, y_pixel_offset, now_x, y_pixel_offset + y_blocks * block_width);
+            g.drawLine(now_x, y_pixel_offset, now_x, y_pixel_offset + y_blocks_count * block_width);
 
         }
         //横线
-        for (int i = 0; i <= y_blocks; i++) {
+        for (int i = 0; i <= y_blocks_count; i++) {
             int now_y = y_pixel_offset + block_width * i;
-            g.drawLine(x_pixel_offset, now_y, x_pixel_offset + x_blocks * block_width, now_y);
+            g.drawLine(x_pixel_offset, now_y, x_pixel_offset + x_blocks_count * block_width, now_y);
 
         }
 
         //画存在的方块
-        for (int i = 0; i < x_blocks; i++) {
-            for (int j = 0; j < y_blocks; j++) {
+        for (int i = 0; i < x_blocks_count; i++) {
+            for (int j = 0; j < y_blocks_count; j++) {
                 if (map[j][i] != -1) {
                     g.setColor(color_map[map[j][i]]);
                     DrawXYBlock(g, i, j);
@@ -150,7 +150,7 @@ public class BlockPanel extends JPanel {
      * @return 是否在地图内
      */
     private boolean insideOfMap(int x, int y) {
-        return (x >= 0 && x < x_blocks && y >= 0 && y < y_blocks);
+        return (x >= 0 && x < x_blocks_count && y >= 0 && y < y_blocks_count);
     }
 
     /**
@@ -161,7 +161,7 @@ public class BlockPanel extends JPanel {
      * @return 是否在地图内
      */
     private boolean insideOfMapWithoutTop(int x, int y) {
-        return (x >= 0 && x < x_blocks && y < y_blocks);
+        return (x >= 0 && x < x_blocks_count && y < y_blocks_count);
     }
 
 
@@ -203,7 +203,7 @@ public class BlockPanel extends JPanel {
     }
 
     /**
-     * 如果碰撞了返回true，这个位置没有碰撞则为false，不用管范围问题，越界只会返回false保证不报错
+     * 如果碰撞了返回true，这个位置没有碰撞则为false，不用管范围问题，越界只会返回true保证不报错
      *
      * @param x         基坐标x
      * @param y         基坐标y
@@ -225,14 +225,14 @@ public class BlockPanel extends JPanel {
         return false;
     }
 
-    private boolean cannotMoveDown() {
+    private boolean canMoveDown() {
         BlockData moved_data = current_block.getMoveTowardsBlocks(current_x, current_y + 1);
         for (int[] point : moved_data.getDatas()) {
-            if (justHasBlock(point[0], point[1]) || !(point[1] < y_blocks)) {
-                return true;
+            if (justHasBlock(point[0], point[1]) || !(point[1] < y_blocks_count)) {
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
     /**
@@ -241,7 +241,7 @@ public class BlockPanel extends JPanel {
      * @return 是否到底
      */
     public boolean TryMoveDown() {
-        if (!cannotMoveDown()) {
+        if (canMoveDown()) {
             current_y++;
             return false;
         }
@@ -253,7 +253,7 @@ public class BlockPanel extends JPanel {
      *
      * @return
      */
-    public boolean FixCurrentBlockAndDetectFailue() {
+    public boolean FixCurrentBlockAndDetectFailure() {
         //确定固定后的颜色
         int index = getColorIndex(this.current_block.getColor());
         if (index == -1) {
@@ -273,9 +273,9 @@ public class BlockPanel extends JPanel {
         double start_rate = 10;//只消掉一行加的分
         double rate = 2;//每多消掉一行增加的倍数
         int count_full_line = 0;
-        for (int i = 0; i < this.y_blocks; i++) {
+        for (int i = 0; i < this.y_blocks_count; i++) {
             boolean is_full = true;
-            for (int j = 0; j < this.x_blocks; j++) {
+            for (int j = 0; j < this.x_blocks_count; j++) {
                 if (this.map[i][j] == 0) {
                     is_full = false;
                     break;
@@ -287,7 +287,7 @@ public class BlockPanel extends JPanel {
                 //遍历每行
                 for (int ti = i - 1; ti >= 0; ti--) {
                     //遍历每列
-                    for (int tj = 0; tj < x_blocks; tj++) {
+                    for (int tj = 0; tj < x_blocks_count; tj++) {
                         //上行移下来
                         this.map[ti + 1][tj] = this.map[ti][tj];
                         //上一行清空
@@ -325,8 +325,8 @@ public class BlockPanel extends JPanel {
 
     public void Reset() {
         this.score = 0;
-        for (int i = 0; i < y_blocks; i++) {
-            for (int j = 0; j < x_blocks; j++) {
+        for (int i = 0; i < y_blocks_count; i++) {
+            for (int j = 0; j < x_blocks_count; j++) {
                 this.map[i][j] = 0;
             }
         }
@@ -372,7 +372,7 @@ public class BlockPanel extends JPanel {
      * @return 初始化的X
      */
     public int getDefaultX() {
-        return x_blocks / 2;
+        return x_blocks_count / 2;
     }
 
     /**
