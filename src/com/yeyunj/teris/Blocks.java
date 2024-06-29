@@ -4,7 +4,7 @@ import java.awt.*;
 import java.util.Random;
 
 public class Blocks {
-    private Color color;
+    private Color color=Color.YELLOW;
     private boolean isRainbow = false;
 
     private BlockData data;
@@ -14,6 +14,7 @@ public class Blocks {
     }
 
     private static final Random random = new Random();
+
     public final static int[][][] blocks = {
             {
                     {0, 0},
@@ -70,7 +71,6 @@ public class Blocks {
 
     public Blocks(BlockData block) {
         this.data = block;
-        this.color = generateRandomColor();
     }
 
     public Color getColor() {
@@ -79,6 +79,10 @@ public class Blocks {
 
     public boolean isRainbow() {
         return isRainbow;
+    }
+
+    public void setRainbow(boolean rainbow) {
+        isRainbow = rainbow;
     }
 
     public void setColor(Color color) {
@@ -138,13 +142,7 @@ public class Blocks {
             blockData.overturn();
         }
 
-        Blocks newBlock = new Blocks(blockData);
-        if (random.nextDouble() < 0.05) { // 5% 概率生成彩虹色方块
-            newBlock.color = new Color(255, 0, 255); // 假设彩虹色为紫色
-            newBlock.isRainbow = true;
-        }
-
-        return newBlock;
+        return new Blocks(blockData);
     }
 
     public int getMaxHeight() {
@@ -153,10 +151,5 @@ public class Blocks {
 
     public int getMaxWidth() {
         return data.getMaxWidth();
-    }
-
-    private Color generateRandomColor() {
-        Color[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW, Color.ORANGE};
-        return colors[random.nextInt(colors.length)];
     }
 }

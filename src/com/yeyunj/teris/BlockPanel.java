@@ -22,6 +22,11 @@ public class BlockPanel extends JPanel {
     private int score = 0;
     Blocks next_block;
 
+    private static final Random rainbow_random = new Random();
+
+    public static final double rainbow_rate=0.05;
+    public static final Color rainbow_color = new Color(255, 0, 255);
+
     public BlockPanel() {
         this.ResetBlock();
     }
@@ -44,11 +49,15 @@ public class BlockPanel extends JPanel {
             Color.BLUE,
             Color.PINK,
             Color.GRAY,
-            new Color(255, 0, 255) // 添加彩虹色方块颜色
+            rainbow_color
     };
 
     public static Color SampleColor() {
-        return color_map[new Random().nextInt(1, color_map.length - 1)];
+        double rainbow_sample=rainbow_random.nextDouble();
+        if(rainbow_sample<rainbow_rate){
+            return rainbow_color;
+        }
+        return color_map[new Random().nextInt(1, color_map.length-1)];
     }
 
     @Override
@@ -247,7 +256,13 @@ public class BlockPanel extends JPanel {
     public void DetectAndDeleteLine() {
         double start_rate = 10; //只消掉一行加的分
         double rate = 2; //每多消掉一行增加的倍数
+
+        double rainbow_start_rate = 15; //只消掉一列加的分
+        double rainbow_rate = 2; //每因彩虹方块多消掉一列增加的倍数
+
         int count_full_line = 0;
+        int[] need_clear_col=new int[this.x_blocks_count];
+
         for (int i = 0; i < this.y_blocks_count; i++) {
             boolean is_full = true;
             for (int j = 0; j < this.x_blocks_count; j++) {
@@ -260,9 +275,9 @@ public class BlockPanel extends JPanel {
             if (is_full) {
                 count_full_line++;
                 //检查这一行是否包含彩虹色方块
-                for (int j = 0; j < this.x_blocks; j++) {
-                    if (color_map[map[i][j]].equals(new Color(255, 0, 255))) {
-                        clearColumn(j);
+                for (int j = 0; j < this.x_blocks_count; j++) {
+                    if (color_map[map[i][j]].equals(rainbow_color)) {
+                        need_clear_col[j]=1;
                     }
                 }
                 //遍历每行
@@ -282,18 +297,32 @@ public class BlockPanel extends JPanel {
                 this.score += start_rate * Math.pow(rate, count_full_line - 1);
             }
         }
+
+        int clear_col_count=0;
+        for(int i=0;i<need_clear_col.length;i++){
+            if(need_clear_col[i]==1){
+                clearColumn(i);
+                clear_col_count++;
+                //消掉的列越多加的分越多
+            }
+        }
+        if(clear_col_count!=0){
+            this.score += rainbow_start_rate * Math.pow(rainbow_rate, clear_col_count - 1);
+        }
     }
 
     private void clearColumn(int columnIndex) {
-        for (int i = 0; i < this.y_blocks; i++) {
+        for (int i = 0; i < this.y_blocks_count; i++) {
             this.map[i][columnIndex] = 0;
         }
     }
 
     private Blocks generateNextBlocks() {
         Blocks ret = Blocks.GetNextBlock();
-        if (ret.getColor().equals(new Color(255, 0, 255))) {
-            ret.setColor(BlockPanel.SampleColor());
+        Color samples_color=BlockPanel.SampleColor();
+        ret.setColor(samples_color);
+        if(samples_color.equals(rainbow_color)){
+            ret.setRainbow(true);
         }
         return ret;
     }
