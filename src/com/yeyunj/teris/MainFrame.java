@@ -34,6 +34,7 @@ public class MainFrame extends JFrame {
     private JMenu about_jmenu;
     private JMenuItem about_author_jmenuitem;
     private JMenuItem about_project_jmenuitem;
+    private JMenuItem about_playing_method_jmenuitem;
 
     //布局
     private GridBagLayout gridBagLayout;
@@ -53,6 +54,7 @@ public class MainFrame extends JFrame {
 
     public MainFrame() {
         this.setTitle("俄罗斯方块");
+//        setLocationRelativeTo(null);
 
         //创建菜单栏
         jMenuBar = new JMenuBar();
@@ -147,6 +149,18 @@ public class MainFrame extends JFrame {
         });
         about_jmenu.add(about_project_jmenuitem);
 
+        about_playing_method_jmenuitem=new JMenuItem("关于玩法");
+        about_playing_method_jmenuitem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                game_timer.stop();
+                PlayingMethodDialog playingMethodDialog=new PlayingMethodDialog(MainFrame.this);
+                playingMethodDialog.setVisible(true);
+
+                game_timer.start();
+            }
+        });
+        about_jmenu.add(about_playing_method_jmenuitem);
 
         //设置布局
         gridBagLayout = new GridBagLayout();
@@ -214,22 +228,30 @@ public class MainFrame extends JFrame {
         game_timer = new Timer(speed, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                boolean is_end = MainFrame.this.blockPanel.TryMoveDown();
-                MainFrame.this.repaint();
+                boolean fix_failure=false;
+                boolean generated_failure=false;
 
-                if (is_end) {
-                    boolean is_failed = MainFrame.this.blockPanel.FixCurrentBlockAndDetectFailure();
-                    if (!is_failed) {
+                boolean touched_other_block = MainFrame.this.blockPanel.TryMoveDown();
+                MainFrame.this.repaint();
+                if (touched_other_block) {
+                    fix_failure = MainFrame.this.blockPanel.FixCurrentBlockAndDetectFailure();
+                    if (!fix_failure) {
                         MainFrame.this.blockPanel.DetectAndDeleteLine();
                         MainFrame.this.blockPanel.ChangeBlock();
-                    } else {
-                        game_timer.stop();
-                        JOptionPane.showMessageDialog(MainFrame.this, "你输了");
-                        MainFrame.this.blockPanel.Reset();
-                        speed = default_speed;
-                        game_timer.setDelay(speed);
-                        game_timer.start();
                     }
+                }
+                //如果fix失败则根本不用管这里
+                if(!fix_failure){
+                    generated_failure=MainFrame.this.blockPanel.generateBlockAtBottomAndDetectFailure();
+                }
+
+                if(fix_failure||generated_failure){
+                    game_timer.stop();
+                    JOptionPane.showMessageDialog(MainFrame.this, "你输了");
+                    MainFrame.this.blockPanel.Reset();
+                    speed = default_speed;
+                    game_timer.setDelay(speed);
+                    game_timer.start();
                 }
             }
         });

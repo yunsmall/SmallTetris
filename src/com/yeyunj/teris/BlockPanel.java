@@ -22,14 +22,15 @@ public class BlockPanel extends JPanel {
     private int score = 0;
     Blocks next_block;
 
+    private int generate_at_bottom_ticks_count = 0;
+
     private static final Random rainbow_random = new Random();
 
     public static final double rainbow_rate=0.05;
     public static final Color rainbow_color = new Color(255, 0, 255);
 
-    public BlockPanel() {
-        this.ResetBlock();
-    }
+    //每50个tick后会生成一层方块
+    public static final int generate_at_buttom_after_ticks=50;
 
     public enum BlockAction {
         MoveRight,
@@ -51,6 +52,10 @@ public class BlockPanel extends JPanel {
             Color.GRAY,
             rainbow_color
     };
+
+    public BlockPanel() {
+        this.ResetBlock();
+    }
 
     public static Color SampleColor() {
         double rainbow_sample=rainbow_random.nextDouble();
@@ -233,6 +238,84 @@ public class BlockPanel extends JPanel {
     }
 
     /**
+     *
+     * @return
+     */
+    public boolean generateBlockAtBottomAndDetectFailure(){
+        boolean is_failure=false;
+
+        generate_at_bottom_ticks_count++;
+        //该生成方块了
+        if(generate_at_bottom_ticks_count==generate_at_buttom_after_ticks){
+            generate_at_bottom_ticks_count=0;
+            is_failure=moveAllBlockUpOneCeilAndDetectFailure();
+            generateRandomBlockAtBottom();
+        }
+        return is_failure;
+    }
+
+    /**
+     * 把这行上方的方块往下移一格
+     * @param col 哪行
+     */
+    private void moveBlockAboveDownOneCeil(int col){
+        //遍历每行
+        for (int ti = col - 1; ti >= 0; ti--) {
+            //遍历每列
+            for (int tj = 0; tj < x_blocks_count; tj++) {
+                //上行移下来
+                this.map[ti + 1][tj] = this.map[ti][tj];
+                //上一行清空
+                this.map[ti][tj] = 0;
+            }
+        }
+    }
+
+    private boolean rowHasBlock(int row){
+        for(int i=0;i<x_blocks_count;i++){
+            if(map[row][i]!=0){
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    /**
+     * 把所有方块往上移一格，如果最上面有方块则失败，失败返回true
+     * @return 是否失败
+     */
+    private boolean moveAllBlockUpOneCeilAndDetectFailure(){
+        for(int i=0;i<x_blocks_count;i++){
+            if(rowHasBlock(0)){
+                return true;
+            }
+        }
+        //遍历每行
+        for (int row = 1; row <y_blocks_count; row++) {
+            //遍历每列
+            for (int tj = 0; tj < x_blocks_count; tj++) {
+                //下一行移上去
+                this.map[row - 1][tj] = this.map[row][tj];
+                //上一行清空
+                this.map[row][tj] = 0;
+            }
+        }
+        //最下面那行清空
+        clearRow(y_blocks_count-1);
+        return false;
+    }
+
+    private void generateRandomBlockAtBottom(){
+        Random rand = new Random();
+        for(int i=0;i<x_blocks_count;i++){
+            if(rand.nextBoolean()){
+                map[y_blocks_count-1][i] = color_map.length-2;
+            }
+        }
+    }
+
+    /**
      * 固定当前的blocks并且检测是否输了，输了返回true
      *
      * @return 是否输了
@@ -289,16 +372,7 @@ public class BlockPanel extends JPanel {
         }
         for(int i=0;i<y_blocks_count;i++){
             if(full_row[i]){
-                //遍历每行
-                for (int ti = i - 1; ti >= 0; ti--) {
-                    //遍历每列
-                    for (int tj = 0; tj < x_blocks_count; tj++) {
-                        //上行移下来
-                        this.map[ti + 1][tj] = this.map[ti][tj];
-                        //上一行清空
-                        this.map[ti][tj] = 0;
-                    }
-                }
+                moveBlockAboveDownOneCeil(i);
             }
         }
         //如果消掉了行
@@ -323,6 +397,12 @@ public class BlockPanel extends JPanel {
     private void clearColumn(int columnIndex) {
         for (int i = 0; i < this.y_blocks_count; i++) {
             this.map[i][columnIndex] = 0;
+        }
+    }
+
+    private void clearRow(int rowIndex) {
+        for (int i = 0; i < this.x_blocks_count; i++) {
+            this.map[rowIndex][i] = 0;
         }
     }
 
@@ -356,6 +436,7 @@ public class BlockPanel extends JPanel {
             }
         }
         this.ResetBlock();
+        this.generate_at_bottom_ticks_count=0;
     }
 
     /**
