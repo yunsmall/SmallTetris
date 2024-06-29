@@ -13,33 +13,17 @@ public class BlockPanel extends JPanel {
     //0为空元素，显示为白色，先索引的是纵向的，即y，然后是横向的x
     private int[][] map = new int[y_blocks_count][x_blocks_count];
 
-
     private int block_width;
-
     Blocks current_block;
 
     private int current_x = x_blocks_count / 2;
     //    private int current_y=-current_block.getBlockLen();
     private int current_y = 0;
-
     private int score = 0;
     Blocks next_block;
 
     public BlockPanel() {
-//        this.setBackground(Color.RED);
-//        for(int i=0;i<y_blocks;i++){
-//            map[i][3]=3;
-//        }
-//        for(int i=0;i<x_blocks;i++){
-//            map[4][i]=5;
-//        }
         this.ResetBlock();
-//        for(int i=10;i<this.y_blocks;i++){
-//            for(int j=1;j<x_blocks;j++){
-//                this.map[i][j]=1;
-//            }
-//        }
-//        current_block.setColor(Color.RED);
     }
 
     public enum BlockAction {
@@ -59,13 +43,13 @@ public class BlockPanel extends JPanel {
             Color.YELLOW,
             Color.BLUE,
             Color.PINK,
-            Color.GRAY
+            Color.GRAY,
+            new Color(255, 0, 255) // 添加彩虹色方块颜色
     };
 
     public static Color SampleColor() {
         return color_map[new Random().nextInt(1, color_map.length - 1)];
     }
-
 
     @Override
     public void paint(Graphics g) {
@@ -80,10 +64,6 @@ public class BlockPanel extends JPanel {
             y_pixel_offset = (this.getHeight() - y_blocks_count * block_width) / 2;
         }
 
-
-//        g.setColor(Color.WHITE);
-//        g.fillRect(0,0,this.getWidth(),this.getHeight());
-
         //画粗线条
         g.setColor(Color.ORANGE);
         //竖线
@@ -93,7 +73,6 @@ public class BlockPanel extends JPanel {
                 if (j != 0) {
                     g.drawLine(now_x + j, y_pixel_offset, now_x + j, y_pixel_offset + y_blocks_count * block_width);
                 }
-
             }
         }
         //横线
@@ -127,7 +106,6 @@ public class BlockPanel extends JPanel {
                 if (map[j][i] != -1) {
                     g.setColor(color_map[map[j][i]]);
                     DrawXYBlock(g, i, j);
-//                    g.fillRect(x_offset+i*block_width+2,y_offset+j*block_width+2,block_width-4,block_width-4);
                 }
             }
         }
@@ -138,8 +116,6 @@ public class BlockPanel extends JPanel {
                 DrawXYBlock(g, point[0] + current_x, point[1] + current_y);
             }
         }
-
-
     }
 
     /**
@@ -163,7 +139,6 @@ public class BlockPanel extends JPanel {
     private boolean insideOfMapWithoutTop(int x, int y) {
         return (x >= 0 && x < x_blocks_count && y < y_blocks_count);
     }
-
 
     private boolean canPlaceBlock(int x, int y) {
         return insideOfMap(x, y) && (map[y][x] == 0);
@@ -251,7 +226,7 @@ public class BlockPanel extends JPanel {
     /**
      * 固定当前的blocks并且检测是否输了，输了返回true
      *
-     * @return
+     * @return 是否输了
      */
     public boolean FixCurrentBlockAndDetectFailure() {
         //确定固定后的颜色
@@ -270,8 +245,8 @@ public class BlockPanel extends JPanel {
     }
 
     public void DetectAndDeleteLine() {
-        double start_rate = 10;//只消掉一行加的分
-        double rate = 2;//每多消掉一行增加的倍数
+        double start_rate = 10; //只消掉一行加的分
+        double rate = 2; //每多消掉一行增加的倍数
         int count_full_line = 0;
         for (int i = 0; i < this.y_blocks_count; i++) {
             boolean is_full = true;
@@ -284,6 +259,12 @@ public class BlockPanel extends JPanel {
             //如果这行满了
             if (is_full) {
                 count_full_line++;
+                //检查这一行是否包含彩虹色方块
+                for (int j = 0; j < this.x_blocks; j++) {
+                    if (color_map[map[i][j]].equals(new Color(255, 0, 255))) {
+                        clearColumn(j);
+                    }
+                }
                 //遍历每行
                 for (int ti = i - 1; ti >= 0; ti--) {
                     //遍历每列
@@ -300,14 +281,20 @@ public class BlockPanel extends JPanel {
                 //加分
                 this.score += start_rate * Math.pow(rate, count_full_line - 1);
             }
-
         }
+    }
 
+    private void clearColumn(int columnIndex) {
+        for (int i = 0; i < this.y_blocks; i++) {
+            this.map[i][columnIndex] = 0;
+        }
     }
 
     private Blocks generateNextBlocks() {
         Blocks ret = Blocks.GetNextBlock();
-        ret.setColor(BlockPanel.SampleColor());
+        if (ret.getColor().equals(new Color(255, 0, 255))) {
+            ret.setColor(BlockPanel.SampleColor());
+        }
         return ret;
     }
 
@@ -351,7 +338,6 @@ public class BlockPanel extends JPanel {
     public int getBlock_width() {
         return block_width;
     }
-
 
     private void DrawXYBlock(Graphics g, int x, int y) {
         g.fillRect(x_pixel_offset + x * block_width + 3, y_pixel_offset + y * block_width + 3, block_width - 5, block_width - 5);
@@ -408,6 +394,4 @@ public class BlockPanel extends JPanel {
             }
         }
     }
-
-
 }
