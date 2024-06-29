@@ -261,7 +261,9 @@ public class BlockPanel extends JPanel {
         double rainbow_rate = 2; //每因彩虹方块多消掉一列增加的倍数
 
         int count_full_line = 0;
-        int[] need_clear_col=new int[this.x_blocks_count];
+
+        boolean[] full_row=new boolean[this.y_blocks_count];
+        boolean[] need_clear_col=new boolean[this.x_blocks_count];
 
         for (int i = 0; i < this.y_blocks_count; i++) {
             boolean is_full = true;
@@ -271,15 +273,22 @@ public class BlockPanel extends JPanel {
                     break;
                 }
             }
+            full_row[i] = is_full;
             //如果这行满了
             if (is_full) {
                 count_full_line++;
                 //检查这一行是否包含彩虹色方块
                 for (int j = 0; j < this.x_blocks_count; j++) {
                     if (color_map[map[i][j]].equals(rainbow_color)) {
-                        need_clear_col[j]=1;
+                        need_clear_col[j] = true;
                     }
                 }
+                full_row[i] = true;
+            }
+
+        }
+        for(int i=0;i<y_blocks_count;i++){
+            if(full_row[i]){
                 //遍历每行
                 for (int ti = i - 1; ti >= 0; ti--) {
                     //遍历每列
@@ -291,16 +300,16 @@ public class BlockPanel extends JPanel {
                     }
                 }
             }
-            //如果消掉了行
-            if (count_full_line != 0) {
-                //加分
-                this.score += start_rate * Math.pow(rate, count_full_line - 1);
-            }
+        }
+        //如果消掉了行
+        if (count_full_line != 0) {
+            //加分
+            this.score += start_rate * Math.pow(rate, count_full_line - 1);
         }
 
         int clear_col_count=0;
         for(int i=0;i<need_clear_col.length;i++){
-            if(need_clear_col[i]==1){
+            if(need_clear_col[i]){
                 clearColumn(i);
                 clear_col_count++;
                 //消掉的列越多加的分越多
