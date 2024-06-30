@@ -29,8 +29,8 @@ public class BlockPanel extends JPanel {
     public static final double rainbow_rate=0.05;
     public static final Color rainbow_color = new Color(255, 0, 255);
 
-    //每40秒后会生成一层方块
-    public static final int generate_at_buttom_after_seconds=2;
+    //每90秒后会生成一层方块
+    public static int generate_at_buttom_after_seconds=90;
 
     public enum BlockAction {
         MoveRight,
@@ -512,6 +512,13 @@ public class BlockPanel extends JPanel {
 
     public int getScore() {
         return this.score;
+    }
+
+    public int getCurrentUserMaxScore(){
+        if(SwingUtilities.getWindowAncestor(this) instanceof MainFrame mainFrame){
+            return mainFrame.getFrom_teris().userData.getMax_score();
+        }
+        return 0;
     }
 
     public void NextStep(BlockAction action) {

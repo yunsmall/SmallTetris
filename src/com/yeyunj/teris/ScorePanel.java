@@ -11,9 +11,13 @@ public class ScorePanel extends JPanel {
 
     private double[] score_location={0.2,0.1};
 
-    private double[] next_block_title_location={0.2,0.2};
+    private double[] max_score_title_location={0.2,0.15};
 
-    private double next_block_location_y=0.3;
+    private double[] max_score_location={0.2,0.2};
+
+    private double[] next_block_title_location={0.2,0.3};
+
+    private double next_block_location_y=0.4;
 
     private int block_x_pixel_offset;
 //    private int block_y_offset;
@@ -33,6 +37,11 @@ public class ScorePanel extends JPanel {
         g.drawString("当前得分：", (int) (score_title_location[0]*this.getWidth()), (int) (score_title_location[1]*this.getHeight()));
         g.setFont(new Font("黑体",Font.BOLD,30));
         g.drawString(String.valueOf(this.blockPanel.getScore()), (int) (score_location[0]*this.getWidth()), (int) (score_location[1]*this.getHeight()));
+
+        g.setFont(new Font("黑体",Font.BOLD,20));
+        g.drawString("最高得分：", (int) (max_score_title_location[0]*this.getWidth()), (int) (max_score_title_location[1]*this.getHeight()));
+        g.setFont(new Font("黑体",Font.BOLD,30));
+        g.drawString(String.valueOf(this.blockPanel.getCurrentUserMaxScore()), (int) (max_score_location[0]*this.getWidth()), (int) (max_score_location[1]*this.getHeight()));
 
         g.setFont(new Font("黑体",Font.BOLD,20));
         g.drawString("下一个方块：", (int) (next_block_title_location[0]*this.getWidth()), (int) (next_block_title_location[1]*this.getHeight()));

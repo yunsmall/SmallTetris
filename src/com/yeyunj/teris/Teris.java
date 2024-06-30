@@ -1,21 +1,45 @@
 package com.yeyunj.teris;
 
 import javax.swing.*;
+import java.sql.SQLException;
 
 public class Teris {
-    MainFrame mainFrame;
-    JFrame loginFrame;
+    private static final String database_path="data.db";
+
+    UserData userData=null;
+
+    LoginManager loginManager;
 
     private Teris(){
-        loginFrame=new JFrame("登录");
-        loginFrame.setContentPane(new LoginFrame().root);
-        loginFrame.setSize(400,300);
-        loginFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        loginFrame.setLocationRelativeTo(null);
+        JFrame loginFrame=null;
+        try{
+            loginManager=new LoginManager(database_path);
+        }
+        catch (SQLException e){
+            throw new RuntimeException(e);
+        }
+
+        loginFrame=LoginFrame.genLoginJFrame(this);
         loginFrame.setVisible(true);
     }
 
+    public LoginManager getLoginManager() {
+        return loginManager;
+    }
+
+    public void updateMaxScoreAndWriteToDatabase(int new_max_score , LoginManager.ErrorCode ec){
+        //常试写入最高分
+        loginManager.setHighScore(userData.getUid(), new_max_score, ec);
+        if(ec.getCode()== LoginManager.ErrorCode.OK){
+            userData.setMax_score(new_max_score);
+        }
+    }
+
     public static void main(String[] args) {
-        new Teris();
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new Teris();
+            }
+        });
     }
 }

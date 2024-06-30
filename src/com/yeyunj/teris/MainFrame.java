@@ -21,18 +21,21 @@ public class MainFrame extends JFrame {
             李鑫：计划表、任务书、功能说明、实验报告的撰写""";
     private final static String about_project_message = """
             项目说明""";
-    private final int default_speed = 500;
+    private final int default_speed = 800;
 
     //一秒调用一次
-    private final int constant_speed_timer_interval = 400;
+    private final int constant_speed_timer_interval = 1000;
 
     //菜单栏部分
     private JMenuBar jMenuBar;
     private JMenu game_jmenu;
     private JMenuItem new_game_jmenuitem;
     private JMenuItem pause_game_jmenuitem;
+    private JMenuItem exit_account_jmenuitem;
+    private JMenuItem exit_jmenuitem;
     private JMenu setting_jmenu;
     private JMenuItem speed_jmenuitem;
+    private JMenuItem move_up_interval_jmenuitem;
     private JMenu about_jmenu;
     private JMenuItem about_author_jmenuitem;
     private JMenuItem about_project_jmenuitem;
@@ -54,8 +57,11 @@ public class MainFrame extends JFrame {
     //游戏速度变量
     private int speed;
 
+    private Teris from_teris;
 
-    public MainFrame() {
+    public MainFrame(Teris teris) {
+        from_teris=teris;
+
         this.setTitle("俄罗斯方块");
 //        setLocationRelativeTo(null);
 
@@ -88,6 +94,29 @@ public class MainFrame extends JFrame {
             }
         });
         game_jmenu.add(pause_game_jmenuitem);
+        //添加退出账号功能
+        exit_account_jmenuitem=new JMenuItem("退出账号");
+        exit_account_jmenuitem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onExit();
+
+                JFrame loginJframe=LoginFrame.genLoginJFrame(from_teris);
+                loginJframe.setVisible(true);
+            }
+        });
+        game_jmenu.add(exit_account_jmenuitem);
+
+        //添加退出功能
+        exit_jmenuitem=new JMenuItem("退出");
+        exit_jmenuitem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onExit();
+            }
+        });
+        game_jmenu.add(exit_jmenuitem);
+
 
         //为菜单栏添加设置选项
         setting_jmenu = new JMenu("设置");
@@ -115,9 +144,32 @@ public class MainFrame extends JFrame {
         });
         setting_jmenu.add(speed_jmenuitem);
 
-        //为菜单栏添加设置选项
+        //添加设置上移间隔功能
+        move_up_interval_jmenuitem=new JMenuItem("上移间隔");
+        move_up_interval_jmenuitem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                stopAllTimer();
+                while (true) {
+                    try {
+                        String ans = JOptionPane.showInputDialog(MainFrame.this, "请输入你想每隔多久生成一次方块（秒）", String.valueOf(BlockPanel.generate_at_buttom_after_seconds));
+                        if (ans != null) {
+                            BlockPanel.generate_at_buttom_after_seconds = Integer.parseInt(ans);
+                        }
+                        break;
+                    } catch (NumberFormatException exception) {
+                        JOptionPane.showMessageDialog(MainFrame.this, "输入不合法，请重新输入");
+                    }
+                }
+                startAllTimer();
+            }
+        });
+        setting_jmenu.add(move_up_interval_jmenuitem);
+
+        //为菜单栏添加关于选项
         about_jmenu = new JMenu("关于");
         jMenuBar.add(about_jmenu);
+
 
         //关于选项添加关于作者功能
         about_author_jmenuitem = new JMenuItem("关于作者");
@@ -225,6 +277,14 @@ public class MainFrame extends JFrame {
             }
         });
 
+        //设置关闭窗口监听
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                onExit();
+            }
+        });
+
         //初始化为默认速度
         speed = default_speed;
         //创建游戏主计时器
@@ -255,6 +315,9 @@ public class MainFrame extends JFrame {
 
                 if(fix_failure||generated_failure){
                     stopAllTimer();
+
+                    tryUpdateMaxScore();
+
                     JOptionPane.showMessageDialog(MainFrame.this, "你输了");
                     MainFrame.this.blockPanel.Reset();
                     speed = default_speed;
@@ -275,25 +338,44 @@ public class MainFrame extends JFrame {
         //设置窗口的一些参数
         this.setSize(width, height);
         this.setResizable(false);
-        this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+        this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         this.requestFocus();
-        this.setVisible(true);
-
-        //启动计时器
-        startAllTimer();
     }
 
-    private void startAllTimer(){
+    public void startAllTimer(){
         constant_speed_timer.start();
         game_tick_timer.start();
     }
 
-    private void stopAllTimer(){
+    public void stopAllTimer(){
         constant_speed_timer.stop();
         game_tick_timer.stop();
     }
 
-//    public static com.yeyunj.teris.MainFrame getInstance(){
+    public Teris getFrom_teris() {
+        return from_teris;
+    }
+
+    public void tryUpdateMaxScore(){
+        int max_score=blockPanel.getCurrentUserMaxScore();
+        if(blockPanel.getScore()>max_score){
+            //常试写入最高分
+            LoginManager.ErrorCode ec=new LoginManager.ErrorCode();
+            from_teris.updateMaxScoreAndWriteToDatabase(blockPanel.getScore(), ec);
+//                        from_teris.loginManager.setHighScore(from_teris.userData.getUid(), );
+            if(ec.getCode()!= LoginManager.ErrorCode.OK){
+                JOptionPane.showMessageDialog(MainFrame.this, ec.getMessage());
+            }
+        }
+    }
+
+    private void onExit(){
+        stopAllTimer();
+        tryUpdateMaxScore();
+        MainFrame.this.dispose();
+    }
+
+    //    public static com.yeyunj.teris.MainFrame getInstance(){
 //        if(m_instance==null){
 //            m_instance=new com.yeyunj.teris.MainFrame();
 //        }
@@ -301,15 +383,15 @@ public class MainFrame extends JFrame {
 //    }
 
 
-    private static void startUI() {
-        MainFrame mainFrame = new MainFrame();
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                startUI();
-            }
-        });
-    }
+//    private static void startUI() {
+//        MainFrame mainFrame = new MainFrame();
+//    }
+//
+//    public static void main(String[] args) {
+//        SwingUtilities.invokeLater(new Runnable() {
+//            public void run() {
+//                startUI();
+//            }
+//        });
+//    }
 }
