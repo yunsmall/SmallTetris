@@ -17,7 +17,9 @@ public class ScorePanel extends JPanel {
 
     private double[] next_block_title_location={0.2,0.3};
 
-    private double next_block_location_y=0.4;
+    private double next_block_location_y=0.5;
+
+    private double[] paused_hint_location={0.2,0.4};
 
     private int block_x_pixel_offset;
 //    private int block_y_offset;
@@ -32,19 +34,28 @@ public class ScorePanel extends JPanel {
         g.setColor(Color.BLUE);
         g.fillRect(0,0,this.getWidth(),this.getHeight());
 
+        Font size20font=new Font("黑体",Font.BOLD,20);
+        Font size30font=new Font("黑体",Font.BOLD,30);
+
         g.setColor(Color.ORANGE);
-        g.setFont(new Font("黑体",Font.BOLD,20));
+        g.setFont(size20font);
         g.drawString("当前得分：", (int) (score_title_location[0]*this.getWidth()), (int) (score_title_location[1]*this.getHeight()));
-        g.setFont(new Font("黑体",Font.BOLD,30));
+        g.setFont(size30font);
         g.drawString(String.valueOf(this.blockPanel.getScore()), (int) (score_location[0]*this.getWidth()), (int) (score_location[1]*this.getHeight()));
 
-        g.setFont(new Font("黑体",Font.BOLD,20));
+        g.setFont(size20font);
         g.drawString("最高得分：", (int) (max_score_title_location[0]*this.getWidth()), (int) (max_score_title_location[1]*this.getHeight()));
-        g.setFont(new Font("黑体",Font.BOLD,30));
+        g.setFont(size30font);
         g.drawString(String.valueOf(this.blockPanel.getCurrentUserMaxScore()), (int) (max_score_location[0]*this.getWidth()), (int) (max_score_location[1]*this.getHeight()));
 
-        g.setFont(new Font("黑体",Font.BOLD,20));
+        g.setFont(size20font);
         g.drawString("下一个方块：", (int) (next_block_title_location[0]*this.getWidth()), (int) (next_block_title_location[1]*this.getHeight()));
+
+        if(blockPanel.isPaused()){
+            g.setColor(Color.RED);
+            g.setFont(size20font);
+            g.drawString("游戏已暂停", (int) (paused_hint_location[0]*this.getWidth()), (int) (paused_hint_location[1]*this.getHeight()));
+        }
 
         int next_blocks_max_width=this.blockPanel.getNext_block().getMaxWidth();
         int next_blocks_max_height=this.blockPanel.getNext_block().getMaxHeight();

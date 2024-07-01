@@ -17,6 +17,7 @@ public class LoginFrame {
 
     private LoginFrame(Teris teris) {
         from_teris=teris;
+
         confirmButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

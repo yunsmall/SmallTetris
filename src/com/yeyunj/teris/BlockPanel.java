@@ -24,6 +24,13 @@ public class BlockPanel extends JPanel {
 
     private int generate_at_bottom_seconds_count = 0;
 
+    private boolean is_paused=false;
+
+    private static final int per_fix_score=5;//每次成功固定方块后加的分
+    private static final double start_rate = 20; //只消掉一行加的分
+    private static final double clear_row_rate = 2; //每多消掉一行增加的倍数
+    private static final double rainbow_coefficient=0.4;
+
     private static final Random rainbow_random = new Random();
 
     public static final double rainbow_rate=0.05;
@@ -158,6 +165,14 @@ public class BlockPanel extends JPanel {
         return insideOfMap(x, y) && (map[y][x] == 0);
     }
 
+    public void switchPaused(){
+        is_paused=!is_paused;
+    }
+
+    public boolean isPaused() {
+        return is_paused;
+    }
+
     /**
      * 如果超出范围仍然会认为能放方块，只有真正有方块才会返回false，一般这个函数只在每个tick的下移函数才会调用，以防止生成时生成在外面的情况
      *
@@ -214,6 +229,10 @@ public class BlockPanel extends JPanel {
         return false;
     }
 
+    /**
+     * 只检测下方的方块，性能比isCrashedWithoutTop方法好
+     * @return 是否可以下移
+     */
     public boolean canMoveDown() {
         BlockData moved_data = current_block.getMoveTowardsBlocks(current_x, current_y + 1);
         for (int[] point : moved_data.getDatas()) {
@@ -222,6 +241,12 @@ public class BlockPanel extends JPanel {
             }
         }
         return true;
+    }
+
+    public void directlyMoveToBottomWithoutFix(){
+        while(canMoveDown()){
+            current_y++;
+        }
     }
 
     /**
@@ -274,13 +299,33 @@ public class BlockPanel extends JPanel {
         }
     }
 
-    private boolean rowHasBlock(int row){
+    /**
+     * 某一行是否有方块
+     * @param row 哪行
+     * @return 是否有方块
+     */
+    private boolean isRowHasBlock(int row){
         for(int i=0;i<x_blocks_count;i++){
             if(map[row][i]!=0){
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * 计算这一列有几个方块
+     * @param colum 哪列
+     * @return 几个方块
+     */
+    private int countBlocksInCol(int colum){
+        int count=0;
+        for(int i=0;i<y_blocks_count;i++){
+            if(map[i][colum]!=0){
+                count++;
+            }
+        }
+        return count;
     }
 
 
@@ -290,7 +335,7 @@ public class BlockPanel extends JPanel {
      */
     private boolean moveAllBlockUpOneCeilAndDetectFailure(){
         for(int i=0;i<x_blocks_count;i++){
-            if(rowHasBlock(0)){
+            if(isRowHasBlock(0)){
                 return true;
             }
         }
@@ -350,14 +395,13 @@ public class BlockPanel extends JPanel {
             }
             this.map[point[1]][point[0]] = index;
         }
+        //没有失败的话每次固定后都加分
+        this.score+=per_fix_score;
+
         return false;
     }
 
     private void DetectAndDeleteLine() {
-        double start_rate = 10; //只消掉一行加的分
-        double rate = 2; //每多消掉一行增加的倍数
-
-        double rainbow_start_rate = 15; //只消掉一列加的分
         double rainbow_rate = 2; //每因彩虹方块多消掉一列增加的倍数
 
         int count_full_line = 0;
@@ -395,20 +439,18 @@ public class BlockPanel extends JPanel {
         //如果消掉了行
         if (count_full_line != 0) {
             //加分
-            this.score += start_rate * Math.pow(rate, count_full_line - 1);
+            this.score += start_rate * Math.pow(clear_row_rate, count_full_line - 1);
         }
 
-        int clear_col_count=0;
-        for(int i=0;i<need_clear_col.length;i++){
+        int cleared_blocks=0;
+        for(int i=0;i<x_blocks_count;i++){
             if(need_clear_col[i]){
+                //消掉的方块越多加的分越多
+                cleared_blocks+=countBlocksInCol(i);
                 clearColumn(i);
-                clear_col_count++;
-                //消掉的列越多加的分越多
             }
         }
-        if(clear_col_count!=0){
-            this.score += rainbow_start_rate * Math.pow(rainbow_rate, clear_col_count - 1);
-        }
+        this.score += rainbow_coefficient*cleared_blocks*cleared_blocks;
     }
 
     private void clearMap(){

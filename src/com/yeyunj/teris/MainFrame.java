@@ -88,9 +88,8 @@ public class MainFrame extends JFrame {
         pause_game_jmenuitem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                stopAllTimer();
-                JOptionPane.showMessageDialog(MainFrame.this, "游戏已暂停");
-                startAllTimer();
+                onPause();
+                MainFrame.this.repaint();
             }
         });
         game_jmenu.add(pause_game_jmenuitem);
@@ -250,19 +249,32 @@ public class MainFrame extends JFrame {
             @Override
             public void keyPressed(KeyEvent e) {
                 switch (e.getKeyCode()) {
-                    case KeyEvent.VK_RIGHT -> {
+                    case KeyEvent.VK_ESCAPE -> {
+                        onPause();
+                    }
+                    case KeyEvent.VK_RIGHT,KeyEvent.VK_D -> {
                         blockPanel.NextStep(BlockPanel.BlockAction.MoveRight);
                     }
-                    case KeyEvent.VK_LEFT -> {
+                    case KeyEvent.VK_LEFT,KeyEvent.VK_A -> {
                         blockPanel.NextStep(BlockPanel.BlockAction.MoveLeft);
                     }
-                    case KeyEvent.VK_UP -> {
+                    case KeyEvent.VK_UP,KeyEvent.VK_W -> {
                         blockPanel.NextStep(BlockPanel.BlockAction.Rot);
                     }
-                    case KeyEvent.VK_DOWN -> {
+                    //加速下落
+                    case KeyEvent.VK_DOWN,KeyEvent.VK_S -> {
                         if (game_tick_timer.getDelay() != speed / 10) {
                             game_tick_timer.setDelay(speed / 10);
                         }
+                    }
+                    //直接落到底
+                    case KeyEvent.VK_SPACE -> {
+                        blockPanel.directlyMoveToBottomWithoutFix();
+                        game_tick_timer.stop();
+                        for(ActionListener listener:game_tick_timer.getActionListeners()){
+                            listener.actionPerformed(null);
+                        }
+                        game_tick_timer.start();
                     }
                 }
                 MainFrame.this.repaint();
@@ -271,8 +283,10 @@ public class MainFrame extends JFrame {
             @Override
             public void keyReleased(KeyEvent e) {
                 //如果松开下降按键则恢复原速度
-                if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-                    game_tick_timer.setDelay(speed);
+                switch (e.getKeyCode()) {
+                    case KeyEvent.VK_DOWN,KeyEvent.VK_S -> {
+                        game_tick_timer.setDelay(speed);
+                    }
                 }
             }
         });
@@ -367,6 +381,16 @@ public class MainFrame extends JFrame {
                 JOptionPane.showMessageDialog(MainFrame.this, ec.getMessage());
             }
         }
+    }
+
+    private void onPause(){
+        if(blockPanel.isPaused()){
+            startAllTimer();
+        }
+        else{
+            stopAllTimer();
+        }
+        blockPanel.switchPaused();
     }
 
     private void onExit(){
