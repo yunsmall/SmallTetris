@@ -1,16 +1,16 @@
-package com.yeyunj.teris;
+package com.yeyunj.tetris;
 
 import javax.swing.*;
 import java.sql.SQLException;
 
-public class Teris {
+public class Tetris {
     private static final String database_path="data.db";
 
     UserData userData=null;
 
     LoginManager loginManager;
 
-    private Teris(){
+    private Tetris(){
         JFrame loginFrame=null;
         try{
             loginManager=new LoginManager(database_path);
@@ -38,7 +38,7 @@ public class Teris {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                new Teris();
+                new Tetris();
             }
         });
     }

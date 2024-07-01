@@ -1,4 +1,4 @@
-package com.yeyunj.teris;
+package com.yeyunj.tetris;
 
 import java.sql.*;
 import java.security.MessageDigest;

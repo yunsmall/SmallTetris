@@ -1,4 +1,4 @@
-package com.yeyunj.teris;
+package com.yeyunj.tetris;
 
 import java.awt.*;
 import java.util.Random;

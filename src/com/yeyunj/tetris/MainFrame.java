@@ -1,4 +1,4 @@
-package com.yeyunj.teris;
+package com.yeyunj.tetris;
 
 import javax.swing.*;
 import java.awt.*;
@@ -57,10 +57,10 @@ public class MainFrame extends JFrame {
     //游戏速度变量
     private int speed;
 
-    private Teris from_teris;
+    private Tetris from_tetris;
 
-    public MainFrame(Teris teris) {
-        from_teris=teris;
+    public MainFrame(Tetris tetris) {
+        from_tetris = tetris;
 
         this.setTitle("俄罗斯方块");
 //        setLocationRelativeTo(null);
@@ -94,20 +94,20 @@ public class MainFrame extends JFrame {
         });
         game_jmenu.add(pause_game_jmenuitem);
         //添加退出账号功能
-        exit_account_jmenuitem=new JMenuItem("退出账号");
+        exit_account_jmenuitem = new JMenuItem("退出账号");
         exit_account_jmenuitem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 onExit();
 
-                JFrame loginJframe=LoginFrame.genLoginJFrame(from_teris);
+                JFrame loginJframe = LoginFrame.genLoginJFrame(from_tetris);
                 loginJframe.setVisible(true);
             }
         });
         game_jmenu.add(exit_account_jmenuitem);
 
         //添加退出功能
-        exit_jmenuitem=new JMenuItem("退出");
+        exit_jmenuitem = new JMenuItem("退出");
         exit_jmenuitem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -144,7 +144,7 @@ public class MainFrame extends JFrame {
         setting_jmenu.add(speed_jmenuitem);
 
         //添加设置上移间隔功能
-        move_up_interval_jmenuitem=new JMenuItem("上移间隔");
+        move_up_interval_jmenuitem = new JMenuItem("上移间隔");
         move_up_interval_jmenuitem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -203,12 +203,12 @@ public class MainFrame extends JFrame {
         });
         about_jmenu.add(about_project_jmenuitem);
 
-        about_playing_method_jmenuitem=new JMenuItem("关于玩法");
+        about_playing_method_jmenuitem = new JMenuItem("关于玩法");
         about_playing_method_jmenuitem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 stopAllTimer();
-                PlayingMethodDialog playingMethodDialog=new PlayingMethodDialog(MainFrame.this);
+                PlayingMethodDialog playingMethodDialog = new PlayingMethodDialog(MainFrame.this);
                 playingMethodDialog.setVisible(true);
 
                 startAllTimer();
@@ -252,29 +252,38 @@ public class MainFrame extends JFrame {
                     case KeyEvent.VK_ESCAPE -> {
                         onPause();
                     }
-                    case KeyEvent.VK_RIGHT,KeyEvent.VK_D -> {
+                    case KeyEvent.VK_RIGHT, KeyEvent.VK_D -> {
                         blockPanel.NextStep(BlockPanel.BlockAction.MoveRight);
+                        //计算一下预测的位置
+                        blockPanel.updatePredictedY();
                     }
-                    case KeyEvent.VK_LEFT,KeyEvent.VK_A -> {
+                    case KeyEvent.VK_LEFT, KeyEvent.VK_A -> {
                         blockPanel.NextStep(BlockPanel.BlockAction.MoveLeft);
+                        //计算一下预测的位置
+                        blockPanel.updatePredictedY();
                     }
-                    case KeyEvent.VK_UP,KeyEvent.VK_W -> {
+                    case KeyEvent.VK_UP, KeyEvent.VK_W -> {
                         blockPanel.NextStep(BlockPanel.BlockAction.Rot);
+                        //计算一下预测的位置
+                        blockPanel.updatePredictedY();
                     }
                     //加速下落
-                    case KeyEvent.VK_DOWN,KeyEvent.VK_S -> {
+                    case KeyEvent.VK_DOWN, KeyEvent.VK_S -> {
                         if (game_tick_timer.getDelay() != speed / 10) {
                             game_tick_timer.setDelay(speed / 10);
                         }
                     }
                     //直接落到底
                     case KeyEvent.VK_SPACE -> {
-                        blockPanel.directlyMoveToBottomWithoutFix();
+                        blockPanel.moveBlockToPredictedLocation();
                         game_tick_timer.stop();
-                        for(ActionListener listener:game_tick_timer.getActionListeners()){
+                        for (ActionListener listener : game_tick_timer.getActionListeners()) {
                             listener.actionPerformed(null);
                         }
                         game_tick_timer.start();
+                    }
+                    case KeyEvent.VK_V -> {
+                        blockPanel.switchShowPredictedLocation();
                     }
                 }
                 MainFrame.this.repaint();
@@ -284,7 +293,7 @@ public class MainFrame extends JFrame {
             public void keyReleased(KeyEvent e) {
                 //如果松开下降按键则恢复原速度
                 switch (e.getKeyCode()) {
-                    case KeyEvent.VK_DOWN,KeyEvent.VK_S -> {
+                    case KeyEvent.VK_DOWN, KeyEvent.VK_S -> {
                         game_tick_timer.setDelay(speed);
                     }
                 }
@@ -305,17 +314,20 @@ public class MainFrame extends JFrame {
         game_tick_timer = new Timer(speed, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                boolean fix_failure=false;
+                boolean fix_failure = false;
                 boolean generated_failure;
 
                 //在底下生成方块前检测一下，防止生成完后新方块嵌入移动的方块中
-                if(!MainFrame.this.blockPanel.canMoveDown()){
+                if (!MainFrame.this.blockPanel.canMoveDown()) {
                     //这种情况肯定不会fail因此忽略了返回值
                     MainFrame.this.blockPanel.whenBlocksFixShouldDoAndDetectFailure();
                 }
-                generated_failure=MainFrame.this.blockPanel.generateBlockAtBottomAndDetectFailure();
+                generated_failure = MainFrame.this.blockPanel.generateBlockAtBottomAndDetectFailure();
 
-                if(!generated_failure){
+                //每帧计算一下预测的位置
+                blockPanel.updatePredictedY();
+
+                if (!generated_failure) {
                     boolean touched_other_block = MainFrame.this.blockPanel.TryMoveDown();
 
 //                    MainFrame.this.repaint();
@@ -327,7 +339,7 @@ public class MainFrame extends JFrame {
                 //先画图再弹输了的窗口，防止最后一帧不显示导致看起来很奇怪
                 MainFrame.this.repaint();
 
-                if(fix_failure||generated_failure){
+                if (fix_failure || generated_failure) {
                     stopAllTimer();
 
                     tryUpdateMaxScore();
@@ -342,7 +354,7 @@ public class MainFrame extends JFrame {
             }
         });
 
-        constant_speed_timer=new Timer(constant_speed_timer_interval, new ActionListener() {
+        constant_speed_timer = new Timer(constant_speed_timer_interval, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 MainFrame.this.blockPanel.incSecondCount();
@@ -356,44 +368,43 @@ public class MainFrame extends JFrame {
         this.requestFocus();
     }
 
-    public void startAllTimer(){
+    public void startAllTimer() {
         constant_speed_timer.start();
         game_tick_timer.start();
     }
 
-    public void stopAllTimer(){
+    public void stopAllTimer() {
         constant_speed_timer.stop();
         game_tick_timer.stop();
     }
 
-    public Teris getFrom_teris() {
-        return from_teris;
+    public Tetris getFromTetris() {
+        return from_tetris;
     }
 
-    public void tryUpdateMaxScore(){
-        int max_score=blockPanel.getCurrentUserMaxScore();
-        if(blockPanel.getScore()>max_score){
+    public void tryUpdateMaxScore() {
+        int max_score = blockPanel.getCurrentUserMaxScore();
+        if (blockPanel.getScore() > max_score) {
             //常试写入最高分
-            LoginManager.ErrorCode ec=new LoginManager.ErrorCode();
-            from_teris.updateMaxScoreAndWriteToDatabase(blockPanel.getScore(), ec);
+            LoginManager.ErrorCode ec = new LoginManager.ErrorCode();
+            from_tetris.updateMaxScoreAndWriteToDatabase(blockPanel.getScore(), ec);
 //                        from_teris.loginManager.setHighScore(from_teris.userData.getUid(), );
-            if(ec.getCode()!= LoginManager.ErrorCode.OK){
+            if (ec.getCode() != LoginManager.ErrorCode.OK) {
                 JOptionPane.showMessageDialog(MainFrame.this, ec.getMessage());
             }
         }
     }
 
-    private void onPause(){
-        if(blockPanel.isPaused()){
+    private void onPause() {
+        if (blockPanel.isPaused()) {
             startAllTimer();
-        }
-        else{
+        } else {
             stopAllTimer();
         }
         blockPanel.switchPaused();
     }
 
-    private void onExit(){
+    private void onExit() {
         stopAllTimer();
         tryUpdateMaxScore();
         MainFrame.this.dispose();

@@ -1,4 +1,4 @@
-package com.yeyunj.teris;
+package com.yeyunj.tetris;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,12 +19,16 @@ public class BlockPanel extends JPanel {
     private int current_x = x_blocks_count / 2;
     //    private int current_y=-current_block.getBlockLen();
     private int current_y = 0;
+
+    private int predicted_y=0;
+
     private int score = 0;
     Blocks next_block;
 
     private int generate_at_bottom_seconds_count = 0;
 
     private boolean is_paused=false;
+    private boolean show_predicted_location=false;
 
     private static final int per_fix_score=5;//每次成功固定方块后加的分
     private static final double start_rate = 20; //只消掉一行加的分
@@ -130,6 +134,16 @@ public class BlockPanel extends JPanel {
                 }
             }
         }
+        //画预测的位置
+        if(show_predicted_location){
+            g.setColor(current_block.getColor().darker());
+            for (int i = 0; i < current_block.getBlockLen(); i++) {
+                for (int[] point : current_block.getData().getDatas()) {
+                    DrawXYBlock(g, point[0] + current_x, point[1] + predicted_y);
+                }
+            }
+        }
+
         //画当前下落的方块
         g.setColor(current_block.getColor());
         for (int i = 0; i < current_block.getBlockLen(); i++) {
@@ -171,6 +185,10 @@ public class BlockPanel extends JPanel {
 
     public boolean isPaused() {
         return is_paused;
+    }
+
+    public void switchShowPredictedLocation(){
+        show_predicted_location=!show_predicted_location;
     }
 
     /**
@@ -243,10 +261,31 @@ public class BlockPanel extends JPanel {
         return true;
     }
 
-    public void directlyMoveToBottomWithoutFix(){
-        while(canMoveDown()){
-            current_y++;
+    /**
+     * 只检测下方的方块，性能比isCrashedWithoutTop方法好
+     * @param x x坐标
+     * @param y y坐标
+     * @return 是否可以下移
+     */
+    public boolean canMoveDownXY(int x,int y) {
+        BlockData moved_data = current_block.getMoveTowardsBlocks(x, y + 1);
+        for (int[] point : moved_data.getDatas()) {
+            if (justHasBlock(point[0], point[1]) || !(point[1] < y_blocks_count)) {
+                return false;
+            }
         }
+        return true;
+    }
+
+    public void updatePredictedY(){
+        predicted_y=current_y;
+        while(canMoveDownXY(current_x,predicted_y)){
+            predicted_y++;
+        }
+    }
+
+    public void moveBlockToPredictedLocation(){
+        current_y=predicted_y;
     }
 
     /**
@@ -558,7 +597,7 @@ public class BlockPanel extends JPanel {
 
     public int getCurrentUserMaxScore(){
         if(SwingUtilities.getWindowAncestor(this) instanceof MainFrame mainFrame){
-            return mainFrame.getFrom_teris().userData.getMax_score();
+            return mainFrame.getFromTetris().userData.getMax_score();
         }
         return 0;
     }

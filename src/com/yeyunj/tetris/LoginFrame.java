@@ -1,4 +1,4 @@
-package com.yeyunj.teris;
+package com.yeyunj.tetris;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -13,10 +13,10 @@ public class LoginFrame {
     private JButton confirmButton;
     private JButton registerButton;
 
-    private Teris from_teris;
+    private Tetris from_tetris;
 
-    private LoginFrame(Teris teris) {
-        from_teris=teris;
+    private LoginFrame(Tetris tetris) {
+        from_tetris = tetris;
 
         confirmButton.addActionListener(new ActionListener() {
             @Override
@@ -37,19 +37,19 @@ public class LoginFrame {
 
     private void tryLogin(String account, String password) {
         LoginManager.ErrorCode ec=new LoginManager.ErrorCode();
-        from_teris.getLoginManager().login(account,password,ec);
+        from_tetris.getLoginManager().login(account,password,ec);
         if(ec.getCode()!=LoginManager.ErrorCode.OK){
             JOptionPane.showMessageDialog(root,ec.getMessage());
             return;
         }
 
-        int uid=from_teris.getLoginManager().getUID(account,ec);
+        int uid= from_tetris.getLoginManager().getUID(account,ec);
         if(ec.getCode()!=LoginManager.ErrorCode.OK){
             JOptionPane.showMessageDialog(root,ec.getMessage());
             return;
         }
 
-        int max_score=from_teris.getLoginManager().getHighScore(uid,ec);
+        int max_score= from_tetris.getLoginManager().getHighScore(uid,ec);
         if(ec.getCode()!=LoginManager.ErrorCode.OK){
             JOptionPane.showMessageDialog(root,ec.getMessage());
             return;
@@ -60,9 +60,9 @@ public class LoginFrame {
 
         //更新玩家数据
         UserData userData=new UserData(uid,account,max_score);
-        from_teris.userData=userData;
+        from_tetris.userData=userData;
         //创建游戏窗口
-        MainFrame mainFrame=new MainFrame(from_teris);
+        MainFrame mainFrame=new MainFrame(from_tetris);
         //显示游戏窗口
         mainFrame.setVisible(true);
         //启动计时器
@@ -72,7 +72,7 @@ public class LoginFrame {
 
     private void tryRegister(String account, String password) {
         LoginManager.ErrorCode ec=new LoginManager.ErrorCode();
-        boolean register_ret=from_teris.getLoginManager().register(account,password,ec);
+        boolean register_ret= from_tetris.getLoginManager().register(account,password,ec);
         if(ec.getCode()!=LoginManager.ErrorCode.OK){
             JOptionPane.showMessageDialog(root,ec.getMessage());
         }
@@ -81,9 +81,9 @@ public class LoginFrame {
         }
     }
 
-    public static JFrame genLoginJFrame(Teris teris) {
+    public static JFrame genLoginJFrame(Tetris tetris) {
         JFrame loginFrame=new JFrame("登录");
-        loginFrame.setContentPane(new LoginFrame(teris).root);
+        loginFrame.setContentPane(new LoginFrame(tetris).root);
         loginFrame.setSize(400,300);
         loginFrame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         loginFrame.setLocationRelativeTo(null);
