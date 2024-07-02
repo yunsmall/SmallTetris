@@ -2,6 +2,7 @@ package com.yeyunj.tetris;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Random;
 
 public class BlockPanel extends JPanel {
@@ -28,17 +29,20 @@ public class BlockPanel extends JPanel {
     private int generate_at_bottom_seconds_count = 0;
 
     private boolean is_paused=false;
-    private boolean show_predicted_location=false;
+    private boolean show_predicted_location=true;
 
     private static final int per_fix_score=5;//每次成功固定方块后加的分
     private static final double start_rate = 20; //只消掉一行加的分
     private static final double clear_row_rate = 2; //每多消掉一行增加的倍数
-    private static final double rainbow_coefficient=0.4;
+    private static final double rainbow_coefficient=0.4;//彩虹方块奖励系数
+    private static final double explode_radius=2;
 
-    private static final Random rainbow_random = new Random();
+    private static final Random block_random = new Random();
 
     public static final double rainbow_rate=0.05;
     public static final Color rainbow_color = new Color(255, 0, 255);
+
+    public static final Color predict_color=new Color(252,216,239);
 
     //每90秒后会生成一层方块
     public static int generate_at_buttom_after_seconds=90;
@@ -69,11 +73,11 @@ public class BlockPanel extends JPanel {
     }
 
     public static Color SampleColor() {
-        double rainbow_sample=rainbow_random.nextDouble();
+        double rainbow_sample= block_random.nextDouble();
         if(rainbow_sample<rainbow_rate){
             return rainbow_color;
         }
-        return color_map[new Random().nextInt(1, color_map.length-1)];
+        return color_map[block_random.nextInt(1, color_map.length-1)];
     }
 
     @Override
@@ -136,7 +140,7 @@ public class BlockPanel extends JPanel {
         }
         //画预测的位置
         if(show_predicted_location){
-            g.setColor(current_block.getColor().darker());
+            g.setColor(predict_color);
             for (int i = 0; i < current_block.getBlockLen(); i++) {
                 for (int[] point : current_block.getData().getDatas()) {
                     DrawXYBlock(g, point[0] + current_x, point[1] + predicted_y);
@@ -441,12 +445,14 @@ public class BlockPanel extends JPanel {
     }
 
     private void DetectAndDeleteLine() {
-        double rainbow_rate = 2; //每因彩虹方块多消掉一列增加的倍数
-
+        //统计消除了几行
         int count_full_line = 0;
-
+        //统计哪几行是被消除的
         boolean[] full_row=new boolean[this.y_blocks_count];
-        boolean[] need_clear_col=new boolean[this.x_blocks_count];
+        //统计所有消除行中彩虹方块的数量
+        ArrayList<int[]> rainblocks_location=new ArrayList<>();
+        //总共炸了多少方块
+        int exploded_blocks_count=0;
 
         for (int i = 0; i < this.y_blocks_count; i++) {
             boolean is_full = true;
@@ -463,13 +469,21 @@ public class BlockPanel extends JPanel {
                 //检查这一行是否包含彩虹色方块
                 for (int j = 0; j < this.x_blocks_count; j++) {
                     if (color_map[map[i][j]].equals(rainbow_color)) {
-                        need_clear_col[j] = true;
+//                        need_clear_col[j] = true;
+                        //添加进彩虹方块列表中
+                        rainblocks_location.add(new int[]{j,i});
                     }
                 }
                 full_row[i] = true;
             }
 
         }
+        //对所有彩虹方块执行爆炸
+        for(int[] location:rainblocks_location){
+            exploded_blocks_count+=chainExplode(location[0],location[1],explode_radius);
+        }
+
+        //爆炸完后再下移每行，不然逻辑错误
         for(int i=0;i<y_blocks_count;i++){
             if(full_row[i]){
                 moveBlockAboveDownOneCeil(i);
@@ -481,15 +495,16 @@ public class BlockPanel extends JPanel {
             this.score += start_rate * Math.pow(clear_row_rate, count_full_line - 1);
         }
 
-        int cleared_blocks=0;
-        for(int i=0;i<x_blocks_count;i++){
-            if(need_clear_col[i]){
-                //消掉的方块越多加的分越多
-                cleared_blocks+=countBlocksInCol(i);
-                clearColumn(i);
-            }
-        }
-        this.score += rainbow_coefficient*cleared_blocks*cleared_blocks;
+//        int cleared_blocks=0;
+//        for(int i=0;i<x_blocks_count;i++){
+//            if(need_clear_col[i]){
+//                //消掉的方块越多加的分越多
+//                cleared_blocks+=countBlocksInCol(i);
+//                clearColumn(i);
+//            }
+//        }
+        //爆炸加的分
+        this.score += rainbow_coefficient*exploded_blocks_count*exploded_blocks_count;
     }
 
     private void clearMap(){
@@ -510,6 +525,62 @@ public class BlockPanel extends JPanel {
         for (int i = 0; i < this.x_blocks_count; i++) {
             this.map[rowIndex][i] = 0;
         }
+    }
+
+    /**
+     * 爆炸，返回炸了多少方块
+     * @param x x坐标
+     * @param y y坐标
+     * @param radius 半径
+     * @return 炸了几个方块
+     */
+    private int explode(int x,int y,int radius){
+        int num=0;
+        //先遍历y轴
+        for(int y_offset=-radius;y_offset<radius+1;y_offset++){
+            int delta_x= (int) Math.round(Math.sqrt(Math.pow(radius,2)-Math.pow(y_offset,2)));
+            for(int x_offset=-delta_x;x_offset<delta_x+1;x_offset++){
+                int target_x=current_x+x_offset,target_y=current_y+y_offset;
+                if(insideOfMap(target_x,target_y)&&map[target_y][target_x]!=0){
+                    num++;
+                    map[target_y][target_x]=0;
+                }
+            }
+        }
+        return num;
+    }
+
+    /**
+     * 爆炸，返回炸了多少方块
+     * @param x x坐标
+     * @param y y坐标
+     * @param radius 半径
+     * @return 炸了几个方块
+     */
+    private int chainExplode(int x,int y,double radius){
+        int round_radius= (int) Math.round(radius);
+        int num=0;
+        //先遍历y轴
+        for(int y_offset=-round_radius;y_offset<round_radius+1;y_offset++){
+            int delta_x= (int) Math.round(Math.sqrt(Math.pow(round_radius,2)-Math.pow(y_offset,2)));
+            for(int x_offset=-delta_x;x_offset<delta_x+1;x_offset++){
+                int target_x=x+x_offset,target_y=y+y_offset;
+                if(insideOfMap(target_x,target_y)&&map[target_y][target_x]!=0){
+                    //如果是彩虹方块则继续爆炸
+                    if(color_map[map[target_y][target_x]].equals(rainbow_color)){
+                        //先清除本方块，防止重复检测导致爆栈
+                        map[target_y][target_x]=0;
+                        num+=chainExplode(target_x,target_y,radius);
+                    }
+                    //如果不是则直接清除
+                    else{
+                        num++;
+                        map[target_y][target_x]=0;
+                    }
+                }
+            }
+        }
+        return num;
     }
 
     private Blocks generateNextBlocks() {

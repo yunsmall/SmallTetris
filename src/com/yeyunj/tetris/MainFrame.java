@@ -364,6 +364,7 @@ public class MainFrame extends JFrame {
         //设置窗口的一些参数
         this.setSize(width, height);
         this.setResizable(false);
+        this.setLocationRelativeTo(null);
         this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         this.requestFocus();
     }
