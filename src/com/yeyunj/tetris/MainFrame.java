@@ -248,39 +248,47 @@ public class MainFrame extends JFrame {
         this.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
+                //暂停状态不响应
+                if(!blockPanel.isPaused()){
+                    switch (e.getKeyCode()){
+                        case KeyEvent.VK_RIGHT, KeyEvent.VK_D -> {
+                            blockPanel.NextStep(BlockPanel.BlockAction.MoveRight);
+                            //计算一下预测的位置
+                            blockPanel.updatePredictedY();
+                        }
+                        case KeyEvent.VK_LEFT, KeyEvent.VK_A -> {
+                            blockPanel.NextStep(BlockPanel.BlockAction.MoveLeft);
+                            //计算一下预测的位置
+                            blockPanel.updatePredictedY();
+                        }
+                        case KeyEvent.VK_UP, KeyEvent.VK_W -> {
+                            blockPanel.NextStep(BlockPanel.BlockAction.Rot);
+                            //计算一下预测的位置
+                            blockPanel.updatePredictedY();
+                        }
+                        //直接落到底
+                        case KeyEvent.VK_SPACE -> {
+                            blockPanel.moveBlockToPredictedLocation();
+                            game_tick_timer.stop();
+                            for (ActionListener listener : game_tick_timer.getActionListeners()) {
+                                listener.actionPerformed(null);
+                            }
+                            game_tick_timer.start();
+                        }
+                    }
+                }
+
+                //不管是否暂停都响应
                 switch (e.getKeyCode()) {
                     case KeyEvent.VK_ESCAPE -> {
                         onPause();
                     }
-                    case KeyEvent.VK_RIGHT, KeyEvent.VK_D -> {
-                        blockPanel.NextStep(BlockPanel.BlockAction.MoveRight);
-                        //计算一下预测的位置
-                        blockPanel.updatePredictedY();
-                    }
-                    case KeyEvent.VK_LEFT, KeyEvent.VK_A -> {
-                        blockPanel.NextStep(BlockPanel.BlockAction.MoveLeft);
-                        //计算一下预测的位置
-                        blockPanel.updatePredictedY();
-                    }
-                    case KeyEvent.VK_UP, KeyEvent.VK_W -> {
-                        blockPanel.NextStep(BlockPanel.BlockAction.Rot);
-                        //计算一下预测的位置
-                        blockPanel.updatePredictedY();
-                    }
+
                     //加速下落
                     case KeyEvent.VK_DOWN, KeyEvent.VK_S -> {
                         if (game_tick_timer.getDelay() != speed / 10) {
                             game_tick_timer.setDelay(speed / 10);
                         }
-                    }
-                    //直接落到底
-                    case KeyEvent.VK_SPACE -> {
-                        blockPanel.moveBlockToPredictedLocation();
-                        game_tick_timer.stop();
-                        for (ActionListener listener : game_tick_timer.getActionListeners()) {
-                            listener.actionPerformed(null);
-                        }
-                        game_tick_timer.start();
                     }
                     case KeyEvent.VK_V -> {
                         blockPanel.switchShowPredictedLocation();
